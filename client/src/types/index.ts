@@ -3,7 +3,7 @@ export type TransportPreference = 'Train' | 'Flight' | 'Bus' | 'Self-Drive' | 'C
 export type AccommodationPreference = 'Hostel' | 'Boutique Hotel' | 'Resort' | 'Homestay' | 'Luxury Hotel' | 'Budget Hotel';
 export type MemberRole = 'Organizer' | 'Co-Leader' | 'Member';
 export type ExpenseCategory = 'Transport' | 'Accommodation' | 'Food' | 'Activities' | 'Shopping' | 'Emergency' | 'Miscellaneous';
-export type ItineraryCategory = 'Transit' | 'Activity' | 'Food' | 'Sightseeing' | 'Shopping' | 'Rest' | 'Check-in' | 'Check-out' | 'Hidden Gem' | 'Return Transit';
+export type ItineraryCategory = 'Transit' | 'Activity' | 'Food' | 'Sightseeing' | 'Shopping' | 'Rest' | 'Check-in' | 'Check-out' | 'Hidden Gem' | 'Return Transit' | 'Culture';
 export type WeatherCondition = 'Sunny' | 'Partly Cloudy' | 'Cloudy' | 'Light Rain' | 'Heavy Rain' | 'Thunderstorm' | 'Snow' | 'Foggy';
 export type WeatherAlertLevel = 'None' | 'Advisory' | 'Warning' | 'Severe';
 
@@ -15,8 +15,27 @@ export interface User {
   createdAt: string;
 }
 
+export type AuthUser = User;
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export interface Trip {
   id: string;
+  userId?: string;
   title: string;
   origin: string;
   destination: string;
@@ -33,6 +52,37 @@ export interface Trip {
   updatedAt: string;
 }
 
+export interface TripSummary {
+  id: string;
+  title: string;
+  origin: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
+export interface TripCreationMemberInput {
+  name: string;
+  role?: MemberRole;
+  email?: string;
+  phone?: string;
+}
+
+export interface TripCreationPayload {
+  origin: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  travellersCount: number;
+  budget: number;
+  transportPreference: string;
+  accommodationPreference: string;
+  travelStyle: string;
+  interests: string[];
+  members?: TripCreationMemberInput[];
+}
+
 export interface TripMember {
   id: string;
   tripId: string;
@@ -42,7 +92,7 @@ export interface TripMember {
   role: MemberRole;
   avatar?: string;
   paidAmount: number;
-  balance: number; // Positive = to receive, Negative = to pay
+  balance: number;
   roomPreference?: string;
   transportPreference?: string;
 }
@@ -53,21 +103,20 @@ export interface TravellerProfile {
   age?: number;
   dietary?: string;
   physicalAbility?: string;
-  emergencyContact?: string;
 }
 
 export interface Transport {
   id: string;
   tripId: string;
   type: 'Train' | 'Flight' | 'Bus' | 'Cab' | 'Metro';
-  provider: string; // e.g. "Vande Bharat Express", "IndiGo", "Uber Intercity"
-  identifier: string; // e.g. "12004", "6E-543"
+  provider: string;
+  identifier: string;
   departureStation: string;
   arrivalStation: string;
-  departureTime: string; // HH:MM or ISO
-  arrivalTime: string;   // HH:MM or ISO
+  departureTime: string;
+  arrivalTime: string;
   price: number;
-  status: 'Scheduled' | 'Confirmed' | 'Delayed' | 'Cancelled';
+  status: 'Scheduled' | 'Confirmed' | 'Delayed' | 'Cancelled' | 'Selected';
   isReturn: boolean;
   seats?: string;
   pnr?: string;
@@ -80,8 +129,8 @@ export interface Accommodation {
   name: string;
   type: string;
   address: string;
-  checkIn: string;  // Date or Time e.g. "2026-10-15 14:00"
-  checkOut: string; // Date or Time e.g. "2026-10-18 11:00"
+  checkIn: string;
+  checkOut: string;
   pricePerNight: number;
   totalPrice: number;
   roomCount: number;
@@ -98,8 +147,8 @@ export interface ItineraryItem {
   title: string;
   description: string;
   category: ItineraryCategory;
-  startTime: string; // "09:00 AM"
-  endTime: string;   // "11:30 AM"
+  startTime: string;
+  endTime: string;
   location: string;
   cost: number;
   status: 'Planned' | 'In Progress' | 'Completed' | 'Skipped';
@@ -114,16 +163,18 @@ export interface ItineraryItem {
     cost: number;
     indoorReason: string;
   };
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   orderIndex: number;
 }
+
+export type ItineraryActivity = ItineraryItem;
 
 export interface ItineraryDay {
   id: string;
   tripId: string;
   dayNumber: number;
-  date: string; // YYYY-MM-DD
+  date: string;
   theme: string;
   weatherForecast?: {
     condition: WeatherCondition;
@@ -169,6 +220,16 @@ export interface HiddenGem {
   isSaved?: boolean;
 }
 
+export interface ExpenseSplit {
+  id?: string;
+  expenseId?: string;
+  memberId: string;
+  memberName?: string;
+  amount?: number;
+  shareAmount?: number;
+  isSettled?: boolean;
+}
+
 export interface Expense {
   id: string;
   tripId: string;
@@ -178,17 +239,21 @@ export interface Expense {
   paidByMemberId: string;
   paidByName?: string;
   splitType: 'Equal' | 'Exact' | 'Custom';
+  splits?: ExpenseSplit[];
   date: string;
   receiptUrl?: string;
   notes?: string;
 }
 
-export interface ExpenseSplit {
+export interface Settlement {
   id: string;
-  expenseId: string;
-  memberId: string;
-  shareAmount: number;
-  isSettled: boolean;
+  tripId: string;
+  fromMemberId: string;
+  fromMemberName: string;
+  toMemberId: string;
+  toMemberName: string;
+  amount: number;
+  status: 'Pending' | 'Settled';
 }
 
 export interface Budget {
@@ -213,7 +278,7 @@ export interface Booking {
   amount: number;
   status: 'Confirmed' | 'Pending' | 'Mock/Demo';
   bookingDate: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 export interface WeatherSnapshot {
@@ -228,34 +293,60 @@ export interface WeatherSnapshot {
   summary: string;
 }
 
-export interface EmergencyContact {
-  id: string;
-  tripId: string;
-  name: string;
-  relation: string;
-  phone: string;
-  priority: number;
-  notes?: string;
+export interface CurrentWeather {
+  temperature: number;
+  windSpeed: number;
+  weatherCode: number;
+  condition: WeatherCondition;
+  description: string;
+  updatedAt: string;
 }
 
-export interface ChatMessage {
-  id: string;
-  tripId: string;
-  senderId: string;
-  senderName: string;
-  senderAvatar?: string;
-  message: string;
-  timestamp: string;
-  attachmentUrl?: string;
-  isAi?: boolean;
+export interface DailyForecastDay {
+  date: string;
+  temperatureMax: number;
+  temperatureMin: number;
+  precipitationProbability: number;
+  weatherCode: number;
+  condition: WeatherCondition;
+  description: string;
 }
 
-export interface ActivityVote {
-  id: string;
-  tripId: string;
-  itemId: string;
-  memberId: string;
-  voteType: 'UP' | 'DOWN';
+export type WeatherDay = DailyForecastDay;
+
+export interface WeatherForecastResponse {
+  destination: string;
+  latitude: number;
+  longitude: number;
+  current: CurrentWeather;
+  daily: DailyForecastDay[];
+  isLive: boolean;
+  provider: string;
+  updatedAt?: string;
+  error?: string;
+}
+
+export type WeatherForecast = WeatherForecastResponse;
+
+export interface GeocodedLocation {
+  latitude: number;
+  longitude: number;
+  displayName: string;
+  city: string;
+  state: string;
+  country: string;
+}
+
+export interface RouteResponse {
+  success: boolean;
+  distanceKm: number;
+  durationMinutes: number;
+  durationFormatted?: string;
+  geometry: [number, number][]; // [lat, lng] array
+  coordinates?: [number, number][];
+  provider: string;
+  mode: string;
+  error?: string;
 }
 
 export interface TripChangeLog {
@@ -296,6 +387,8 @@ export interface TripMetrics {
     remaining: number;
     percentageSpent: number;
   }[];
+  categorySpend?: Record<string, number>;
+  categorySpending?: Record<string, number>;
   spendingAlerts: string[];
   aiFinancialAdvice: string[];
   groupBalances: {
@@ -305,6 +398,9 @@ export interface TripMetrics {
     shouldPay: number;
     netBalance: number;
   }[];
+  settlements: Settlement[];
+  settledAmount: number;
+  outstandingAmount: number;
 }
 
 export interface FullTripData {
@@ -317,7 +413,6 @@ export interface FullTripData {
   budget: Budget;
   bookings: Booking[];
   weather: WeatherSnapshot[];
-  emergencyContacts: EmergencyContact[];
   hiddenGems: HiddenGem[];
   changeLogs: TripChangeLog[];
   metrics: TripMetrics;
@@ -408,4 +503,3 @@ export interface FlightSearchResponse {
   destinationAirportNotice?: string;
   flights: FlightResult[];
 }
-

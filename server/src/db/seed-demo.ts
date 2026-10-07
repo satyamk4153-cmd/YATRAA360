@@ -9,9 +9,7 @@ import {
   Budget,
   Booking,
   WeatherSnapshot,
-  EmergencyContact,
   HiddenGem,
-  ChatMessage,
   TripChangeLog,
   NotificationItem
 } from '../types';
@@ -21,6 +19,7 @@ export function seedDemoTrip(): Trip {
 
   const trip: Trip = {
     id: tripId,
+    userId: 'usr_demo_yatra',
     title: 'Moradabad to Manali Himalayan Odyssey',
     origin: 'Moradabad',
     destination: 'Manali',
@@ -648,45 +647,6 @@ export function seedDemoTrip(): Trip {
     }
   ];
 
-  const emergencyContacts: EmergencyContact[] = [
-    {
-      id: 'ec_1',
-      tripId,
-      name: 'Manali Mountain & Valley Rescue Police',
-      relation: 'Emergency Services',
-      phone: '+91 1902 252100',
-      priority: 1,
-      notes: '24/7 mountain rescue and transit assistance'
-    },
-    {
-      id: 'ec_2',
-      tripId,
-      name: 'Civil Hospital Manali Emergency Ward',
-      relation: 'Medical Care',
-      phone: '+91 1902 252326',
-      priority: 1,
-      notes: 'Equipped with oxygen & trauma emergency facilities'
-    },
-    {
-      id: 'ec_3',
-      tripId,
-      name: 'Hotel Front Desk / Emergency Concierge',
-      relation: 'Local Stay Manager',
-      phone: '+91 98160 55443',
-      priority: 2,
-      notes: 'On-site 24-hr manager at Pineview Eco Retreat'
-    },
-    {
-      id: 'ec_4',
-      tripId,
-      name: 'Family Emergency Contact (Moradabad)',
-      relation: 'Family Emergency Line',
-      phone: '+91 98765 43210',
-      priority: 2,
-      notes: 'Home family point of contact'
-    }
-  ];
-
   const hiddenGems: HiddenGem[] = [
     {
       id: 'gem_jogini',
@@ -747,33 +707,6 @@ export function seedDemoTrip(): Trip {
     }
   ];
 
-  const chatMessages: ChatMessage[] = [
-    {
-      id: 'msg_1',
-      tripId,
-      senderId: 'mem_satyam',
-      senderName: 'Satyam Sharma',
-      message: 'Hey everyone! Moradabad to Manali trip is generated door-to-door. Vande Bharat tickets & hotel advance are booked! 🎉',
-      timestamp: '10:00 AM'
-    },
-    {
-      id: 'msg_2',
-      tripId,
-      senderId: 'mem_rahul',
-      senderName: 'Rahul Verma',
-      message: 'Awesome Satyam! I covered the ₹7,200 train expense. You can check the split in the Group Manager.',
-      timestamp: '10:05 AM'
-    },
-    {
-      id: 'msg_3',
-      tripId,
-      senderId: 'mem_neha',
-      senderName: 'Neha Singh',
-      message: 'Looks great! Can we check out Jogini Falls secret trail on Day 2 if weather stays clear?',
-      timestamp: '10:12 AM'
-    }
-  ];
-
   const changeLogs: TripChangeLog[] = [
     {
       id: 'log_init',
@@ -809,11 +742,9 @@ export function seedDemoTrip(): Trip {
   db.setBudget(tripId, budget);
   db.setBookings(tripId, bookings);
   db.setWeather(tripId, weather);
-  db.setEmergencyContacts(tripId, emergencyContacts);
   db.setHiddenGems(tripId, hiddenGems);
   db.setNotifications(tripId, notifications);
   changeLogs.forEach(l => db.addChangeLog(tripId, l));
-  chatMessages.forEach(m => db.addChatMessage(tripId, m));
 
   return trip;
 }

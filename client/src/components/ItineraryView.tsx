@@ -43,6 +43,9 @@ export const ItineraryView: React.FC = () => {
   if (!currentTrip) return null;
 
   const { itinerary, trip } = currentTrip;
+  const tripDaysCount = trip?.startDate && trip?.endDate
+    ? Math.max(1, Math.round((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / 86400000) + 1)
+    : (itinerary?.length || 1);
   const activeDay = itinerary.find(d => d.dayNumber === selectedDayNum) || itinerary[0];
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -121,26 +124,49 @@ export const ItineraryView: React.FC = () => {
         </div>
       </div>
 
+      {/* Banner if itinerary has fewer days than trip duration */}
+      {tripDaysCount > (itinerary?.length || 0) && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-blue-950 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-5 h-5 text-blue-600 shrink-0" />
+            <div>
+              <span className="font-bold">Multi-Day Journey Schedule: </span>
+              <span>Your trip spans <strong>{tripDaysCount} days</strong> ({trip.startDate} to {trip.endDate}), currently displaying <strong>{itinerary?.length || 0} planned day(s)</strong>.</span>
+            </div>
+          </div>
+          <button
+            onClick={() => replanItinerary(`Generate complete ${tripDaysCount}-day schedule`)}
+            className="px-3.5 py-1.5 rounded-lg bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors shrink-0 cursor-pointer text-xs flex items-center gap-1.5 shadow-xs"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Auto-Fill All {tripDaysCount} Days</span>
+          </button>
+        </div>
+      )}
+
       {/* Days Tabs Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {itinerary.map((day) => {
-          const isSelected = day.dayNumber === selectedDayNum;
-          return (
-            <button
-              key={day.id}
-              onClick={() => setSelectedDayNum(day.dayNumber)}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1.5 border transition-all cursor-pointer ${
-                isSelected
-                  ? 'bg-blue-700 text-white border-blue-700'
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-800'
-              }`}
-            >
-              <span>Day {day.dayNumber}</span>
-              <span className="text-[10px] opacity-75 font-normal">({day.date.slice(5)})</span>
-            </button>
-          );
-        })}
-      </div>
+      {itinerary && itinerary.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {itinerary.map((day) => {
+            const isSelected = day.dayNumber === selectedDayNum;
+            const dateDisplay = day.date ? (day.date.length > 5 ? day.date.slice(5) : day.date) : '';
+            return (
+              <button
+                key={day.id}
+                onClick={() => setSelectedDayNum(day.dayNumber)}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold shrink-0 flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-blue-700 text-white border-blue-700 shadow-xs'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-800'
+                }`}
+              >
+                <span>Day {day.dayNumber}</span>
+                {dateDisplay && <span className="text-[10px] opacity-75 font-normal">({dateDisplay})</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Active Day Header */}
       {activeDay && (
@@ -150,7 +176,7 @@ export const ItineraryView: React.FC = () => {
               Day {activeDay.dayNumber}: {activeDay.theme}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {activeDay.items.length} activities • {activeDay.date}
+              {activeDay.items?.length || 0} activities • {activeDay.date}
             </p>
           </div>
 
@@ -162,7 +188,7 @@ export const ItineraryView: React.FC = () => {
             }`}>
               <CloudRain className={`w-4 h-4 ${activeDay.weatherForecast.alertLevel === 'Warning' ? 'text-amber-600' : 'text-sky-500'}`} />
               <div>
-                <span className="font-bold">{activeDay.weatherForecast.condition}</span> ({activeDay.weatherForecast.tempC}°C)
+                <span className="font-bold">{activeDay.weatherForecast.condition}</span> • {activeDay.weatherForecast.tempC}°C • {activeDay.weatherForecast.precipitationChance ?? 5}% rain
                 {activeDay.weatherForecast.alertLevel === 'Warning' && (
                   <span className="text-[10px] block text-amber-700">Weather alert – indoor alternatives suggested</span>
                 )}
@@ -172,18 +198,59 @@ export const ItineraryView: React.FC = () => {
         </div>
       )}
 
-      {/* Items List */}
-      <div className="space-y-3">
-        {activeDay?.items.map((item, idx) => {
-          return (
-            <div
-              key={item.id}
-              className={`p-4 sm:p-5 rounded-xl border transition-all ${
-                item.isUserModified
-                  ? 'bg-white border-purple-300 shadow-xs'
-                  : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
-              }`}
+      {/* Empty Itinerary or Empty Day State */}
+      {(!itinerary || itinerary.length === 0) ? (
+        <div className="p-10 rounded-xl bg-white border border-slate-200 text-center space-y-3">
+          <CalendarDays className="w-10 h-10 text-blue-600 mx-auto" />
+          <h3 className="text-base font-bold text-slate-900">No Itinerary Days Planned Yet</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Generate an AI-optimized schedule with door-to-door transit, accommodation check-in, and activities.
+          </p>
+          <button
+            onClick={() => replanItinerary('Initialize complete journey schedule')}
+            className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-700 text-white hover:bg-blue-800 flex items-center gap-2 mx-auto cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Generate Itinerary</span>
+          </button>
+        </div>
+      ) : activeDay && (!activeDay.items || activeDay.items.length === 0) ? (
+        <div className="p-8 rounded-xl bg-white border border-slate-200 text-center space-y-3">
+          <Clock className="w-8 h-8 text-slate-400 mx-auto" />
+          <h3 className="text-sm font-bold text-slate-800">No activities scheduled for Day {activeDay.dayNumber}</h3>
+          <p className="text-xs text-slate-500">
+            Add custom sightseeing, meals, or leisure stops, or click Replan to generate activities.
+          </p>
+          <div className="flex justify-center gap-2 pt-1">
+            <button
+              onClick={() => setAddModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer"
             >
+              <Plus className="w-3.5 h-3.5 text-blue-600" />
+              <span>Add Activity</span>
+            </button>
+            <button
+              onClick={() => replanItinerary(`Optimize Day ${activeDay.dayNumber} activities`)}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-700 text-white hover:bg-blue-800 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Populate Day</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Items List */
+        <div className="space-y-3">
+          {activeDay?.items?.map((item, idx) => {
+            return (
+              <div
+                key={item.id}
+                className={`p-4 sm:p-5 rounded-xl border transition-all ${
+                  item.isUserModified
+                    ? 'bg-white border-purple-300 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+                }`}
+              >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 
                 {/* Left Time & Title */}
@@ -293,6 +360,7 @@ export const ItineraryView: React.FC = () => {
           );
         })}
       </div>
+      )}
 
       {/* Edit Item Modal */}
       {editModalItem && (

@@ -12,10 +12,12 @@ import {
   Building2,
   Home,
   Car,
-  ShieldCheck,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import { RideProviderCard } from './RideProviderCard';
 
 export const DoorToDoorView: React.FC = () => {
   const { currentTrip, searchOrigin, searchDestination, setView, addToast } = useTripStore();
@@ -31,15 +33,18 @@ export const DoorToDoorView: React.FC = () => {
   const [destAddress, setDestAddress] = useState(`${destination} City Center / Hotel`);
   const [firstMileBooked, setFirstMileBooked] = useState(false);
   const [lastMileBooked, setLastMileBooked] = useState(false);
+  const [showFirstMileRides, setShowFirstMileRides] = useState(false);
+  const [showLastMileRides, setShowLastMileRides] = useState(false);
 
   // Estimations
   const firstMileDist = '12 km';
   const firstMileTime = '25 mins';
   const firstMileFare = 280;
 
-  const mainTransitDist = origin.toLowerCase() === 'meerut' && destination.toLowerCase() === 'new delhi'
-    ? '75 km'
-    : '450 km';
+  const mainTransitDist =
+    (origin || '').toLowerCase() === 'meerut' && (destination || '').toLowerCase() === 'new delhi'
+      ? '75 km'
+      : '450 km';
   const mainTransitTime = outbound?.arrivalTime && outbound?.departureTime ? '1h 15m' : '3h 30m';
   const mainTransitFare = outbound?.price || 480;
 
@@ -165,23 +170,66 @@ export const DoorToDoorView: React.FC = () => {
               </p>
             </div>
 
-            <button
-              onClick={() => {
-                setFirstMileBooked(!firstMileBooked);
-                addToast(
-                  firstMileBooked ? 'Removed cab booking from door-to-door plan' : 'Confirmed first-mile cab transfer!',
-                  firstMileBooked ? 'info' : 'success'
-                );
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                firstMileBooked
-                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                  : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
-              }`}
-            >
-              {firstMileBooked ? '✓ Cab Confirmed (₹280)' : '+ Mark Cab as Booked'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowFirstMileRides(!showFirstMileRides)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>{showFirstMileRides ? 'Hide Rides' : 'Book Uber / Ola / Rapido'}</span>
+                {showFirstMileRides ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFirstMileBooked(!firstMileBooked);
+                  addToast(
+                    firstMileBooked ? 'Removed cab booking from door-to-door plan' : 'Confirmed first-mile cab transfer!',
+                    firstMileBooked ? 'info' : 'success'
+                  );
+                }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  firstMileBooked
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                    : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                }`}
+              >
+                {firstMileBooked ? '✓ Cab Confirmed (₹280)' : '+ Mark Cab as Booked'}
+              </button>
+            </div>
           </div>
+
+          {showFirstMileRides && (
+            <div className="pt-3 border-t border-slate-200/80 space-y-3">
+              <span className="text-2xs font-semibold text-slate-500 uppercase tracking-wider block">
+                Instant Cab Options ({homeAddress} ➔ {outbound?.departureStation || `${origin} Station`}):
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <RideProviderCard
+                  provider="uber"
+                  pickup={{ address: homeAddress }}
+                  destination={{ address: outbound?.departureStation || `${origin} Station` }}
+                  estimatedFare="₹260 – ₹320"
+                  eta="3-5 mins"
+                />
+                <RideProviderCard
+                  provider="ola"
+                  pickup={{ address: homeAddress }}
+                  destination={{ address: outbound?.departureStation || `${origin} Station` }}
+                  estimatedFare="₹240 – ₹300"
+                  eta="4-6 mins"
+                />
+                <RideProviderCard
+                  provider="rapido"
+                  pickup={{ address: homeAddress }}
+                  destination={{ address: outbound?.departureStation || `${origin} Station` }}
+                  estimatedFare="₹120 – ₹250"
+                  eta="2-4 mins"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SEGMENT 3: Main Intercity Transit (Train or Flight) */}
@@ -249,23 +297,66 @@ export const DoorToDoorView: React.FC = () => {
               </p>
             </div>
 
-            <button
-              onClick={() => {
-                setLastMileBooked(!lastMileBooked);
-                addToast(
-                  lastMileBooked ? 'Removed arrival taxi from plan' : 'Confirmed last-mile taxi transfer!',
-                  lastMileBooked ? 'info' : 'success'
-                );
-              }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                lastMileBooked
-                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                  : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
-              }`}
-            >
-              {lastMileBooked ? '✓ Taxi Confirmed (₹220)' : '+ Mark Taxi as Booked'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLastMileRides(!showLastMileRides)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <span>{showLastMileRides ? 'Hide Rides' : 'Book Uber / Ola / Rapido'}</span>
+                {showLastMileRides ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setLastMileBooked(!lastMileBooked);
+                  addToast(
+                    lastMileBooked ? 'Removed arrival taxi from plan' : 'Confirmed last-mile taxi transfer!',
+                    lastMileBooked ? 'info' : 'success'
+                  );
+                }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  lastMileBooked
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                    : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                }`}
+              >
+                {lastMileBooked ? '✓ Taxi Confirmed (₹220)' : '+ Mark Taxi as Booked'}
+              </button>
+            </div>
           </div>
+
+          {showLastMileRides && (
+            <div className="pt-3 border-t border-slate-200/80 space-y-3">
+              <span className="text-2xs font-semibold text-slate-500 uppercase tracking-wider block">
+                Instant Cab Options ({outbound?.arrivalStation || `${destination} Terminal`} ➔ {destAddress}):
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <RideProviderCard
+                  provider="uber"
+                  pickup={{ address: outbound?.arrivalStation || `${destination} Terminal` }}
+                  destination={{ address: destAddress }}
+                  estimatedFare="₹200 – ₹270"
+                  eta="2-5 mins"
+                />
+                <RideProviderCard
+                  provider="ola"
+                  pickup={{ address: outbound?.arrivalStation || `${destination} Terminal` }}
+                  destination={{ address: destAddress }}
+                  estimatedFare="₹190 – ₹250"
+                  eta="3-6 mins"
+                />
+                <RideProviderCard
+                  provider="rapido"
+                  pickup={{ address: outbound?.arrivalStation || `${destination} Terminal` }}
+                  destination={{ address: destAddress }}
+                  estimatedFare="₹90 – ₹220"
+                  eta="2-4 mins"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SEGMENT 5: Final Destination */}

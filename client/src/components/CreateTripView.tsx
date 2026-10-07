@@ -7,11 +7,21 @@ import {
   Wallet,
   Train,
   Check,
-  MapPin
+  MapPin,
+  UserPlus,
+  Trash2
 } from 'lucide-react';
 
+interface MemberDraft {
+  id: string;
+  name: string;
+  role: 'Organizer' | 'Co-Leader' | 'Member';
+  email: string;
+  phone: string;
+}
+
 export const CreateTripView: React.FC = () => {
-  const { createTrip, isLoading, setView } = useTripStore();
+  const { createTrip, isLoading, setView, user } = useTripStore();
 
   const [origin, setOrigin] = useState('Meerut');
   const [destination, setDestination] = useState('Jaipur');
@@ -23,6 +33,62 @@ export const CreateTripView: React.FC = () => {
   const [accommodationPreference, setAccommodationPreference] = useState('Boutique Hotel');
   const [travelStyle, setTravelStyle] = useState('Balanced');
   const [interests, setInterests] = useState<string[]>(['History', 'Food', 'Hidden Places']);
+
+  // Member names and co-travellers state - prompt user for real names
+  const [members, setMembers] = useState<MemberDraft[]>([
+    { id: 'mem_1', name: user?.name || 'You (Organizer)', role: 'Organizer', email: user?.email || '', phone: '' },
+    { id: 'mem_2', name: '', role: 'Co-Leader', email: '', phone: '' },
+    { id: 'mem_3', name: '', role: 'Member', email: '', phone: '' },
+    { id: 'mem_4', name: '', role: 'Member', email: '', phone: '' }
+  ]);
+
+  const handleSliderChange = (count: number) => {
+    const safeCount = Math.max(1, count);
+    setTravellersCount(safeCount);
+    setMembers(prev => {
+      if (safeCount > prev.length) {
+        const added: MemberDraft[] = [];
+        for (let i = prev.length; i < safeCount; i++) {
+          added.push({
+            id: `mem_${Date.now()}_${i + 1}`,
+            name: '',
+            role: i === 1 ? 'Co-Leader' : 'Member',
+            email: '',
+            phone: ''
+          });
+        }
+        return [...prev, ...added];
+      } else if (safeCount < prev.length) {
+        return prev.slice(0, safeCount);
+      }
+      return prev;
+    });
+  };
+
+  const handleAddMember = () => {
+    const nextIdx = members.length + 1;
+    const newMember: MemberDraft = {
+      id: `mem_${Date.now()}_${nextIdx}`,
+      name: '',
+      role: nextIdx === 2 ? 'Co-Leader' : 'Member',
+      email: '',
+      phone: ''
+    };
+    const updated = [...members, newMember];
+    setMembers(updated);
+    setTravellersCount(updated.length);
+  };
+
+  const handleRemoveMember = (id: string) => {
+    if (members.length <= 1) return;
+    const updated = members.filter(m => m.id !== id);
+    setMembers(updated);
+    setTravellersCount(updated.length);
+  };
+
+  const handleMemberChange = (id: string, field: 'name' | 'email' | 'phone', value: string) => {
+    setMembers(prev => prev.map(m => (m.id === id ? { ...m, [field]: value } : m)));
+  };
 
   const interestOptions = [
     'History',
@@ -50,12 +116,18 @@ export const CreateTripView: React.FC = () => {
       destination,
       startDate,
       endDate,
-      travellersCount,
+      travellersCount: members.length,
       budget,
       transportPreference,
       accommodationPreference,
       travelStyle,
-      interests
+      interests,
+      members: members.map((m, idx) => ({
+        name: m.name.trim() || (idx === 0 ? (user?.name || 'You (Organizer)') : `Traveller ${idx + 1}`),
+        role: m.role,
+        email: m.email.trim() || undefined,
+        phone: m.phone.trim() || undefined
+      }))
     });
   };
 
@@ -169,7 +241,7 @@ export const CreateTripView: React.FC = () => {
                 min="1"
                 max="16"
                 value={travellersCount}
-                onChange={(e) => setTravellersCount(Number(e.target.value))}
+                onChange={(e) => handleSliderChange(Number(e.target.value))}
                 className="w-full accent-blue-700 h-2 bg-slate-200 rounded-lg cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-slate-400 mt-1">
@@ -200,6 +272,121 @@ export const CreateTripView: React.FC = () => {
                 <span>₹50,000</span>
                 <span>₹1,50,000+</span>
               </div>
+            </div>
+          </div>
+
+          {/* Member Names & Co-Travellers Input Form */}
+          <div className="mt-5 pt-4 border-t border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-blue-600" />
+                  Traveller Names & Contact ({members.length})
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Add member names so they appear in bookings, tickets, daily schedule, and group expense splits.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddMember}
+                className="self-start sm:self-auto px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>+ Add Traveller</span>
+              </button>
+            </div>
+
+            {members.length > 1 && (
+              <div className="mb-3.5 p-3 rounded-lg bg-blue-50/80 border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5">
+                <Users className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-blue-950">Who is travelling with you? </span>
+                  <span>Please type the names of all companions below so railway &amp; airline tickets, hotel rooms, and expense splits are generated under their names.</span>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {members.map((mem, idx) => (
+                <div
+                  key={mem.id}
+                  className={`p-3.5 rounded-lg border transition-all space-y-2 ${
+                    idx > 0 && !mem.name.trim()
+                      ? 'bg-amber-50/40 border-amber-200 hover:border-amber-300'
+                      : 'bg-slate-50/70 border-slate-200 hover:bg-white hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                      <span className={`w-5 h-5 rounded-full text-white text-[10px] flex items-center justify-center font-bold ${
+                        idx === 0 ? 'bg-blue-600' : 'bg-indigo-600'
+                      }`}>
+                        {idx + 1}
+                      </span>
+                      {idx === 0 ? 'Lead Organizer (You)' : `Traveller ${idx + 1}`}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        mem.role === 'Organizer'
+                          ? 'bg-purple-50 text-purple-700 border-purple-200'
+                          : mem.role === 'Co-Leader'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}>
+                        {mem.role}
+                      </span>
+                      {idx > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(mem.id)}
+                          className="text-slate-400 hover:text-red-600 p-1 rounded transition-colors cursor-pointer"
+                          title="Remove traveller"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div>
+                      <input
+                        type="text"
+                        placeholder={idx === 0 ? "Your Full Name (Organizer)" : `Enter Traveller ${idx + 1} Full Name (e.g. Priya, Rohit...)`}
+                        value={mem.name}
+                        onChange={(e) => handleMemberChange(mem.id, 'name', e.target.value)}
+                        className={`w-full px-2.5 py-1.5 rounded-md bg-white border text-xs focus:outline-none transition-colors ${
+                          idx > 0 && !mem.name.trim()
+                            ? 'border-amber-300 focus:border-blue-500 text-slate-900 placeholder:text-amber-600/70'
+                            : 'border-slate-300 focus:border-blue-500 text-slate-900'
+                        }`}
+                      />
+                      {idx > 0 && !mem.name.trim() && (
+                        <p className="text-[10px] text-amber-700 font-medium mt-1">
+                          Type companion name to personalise tickets and expenses
+                        </p>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="email"
+                        placeholder="Email (optional)"
+                        value={mem.email}
+                        onChange={(e) => handleMemberChange(mem.id, 'email', e.target.value)}
+                        className="w-full px-2 py-1 rounded bg-white border border-slate-200 text-slate-800 text-[11px] focus:outline-none focus:border-blue-500"
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone (optional)"
+                        value={mem.phone}
+                        onChange={(e) => handleMemberChange(mem.id, 'phone', e.target.value)}
+                        className="w-full px-2 py-1 rounded bg-white border border-slate-200 text-slate-800 text-[11px] focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

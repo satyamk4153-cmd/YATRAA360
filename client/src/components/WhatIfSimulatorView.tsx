@@ -314,7 +314,7 @@ export const WhatIfSimulatorView: React.FC = () => {
           </div>
 
           {/* AI Recommendations */}
-          {simulationResult.aiRecommendations.length > 0 && (
+          {simulationResult.aiRecommendations && simulationResult.aiRecommendations.length > 0 && (
             <div className="p-4 rounded-lg bg-purple-50 border border-purple-200 text-xs text-purple-800">
               <span className="font-bold text-purple-900 flex items-center gap-1.5 mb-1.5">
                 <Sparkles className="w-4 h-4 text-purple-700" /> AI Advisory:
@@ -324,7 +324,7 @@ export const WhatIfSimulatorView: React.FC = () => {
           )}
 
           {/* Itinerary Adjustments Preview */}
-          {simulationResult.itineraryAdjustments.length > 0 && (
+          {simulationResult.itineraryAdjustments && simulationResult.itineraryAdjustments.length > 0 && (
             <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs">
               <span className="font-bold text-slate-700 block mb-1">Downstream Itinerary Adaptations:</span>
               <p className="text-slate-600 leading-relaxed">{simulationResult.itineraryAdjustments[0]}</p>

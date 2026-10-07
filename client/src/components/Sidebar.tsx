@@ -6,14 +6,10 @@ import {
   DoorClosed,
   MapPin,
   Users,
-  Receipt,
   PiggyBank,
   Sparkles,
   CloudSun,
   Gem,
-  Ticket,
-  ShieldCheck,
-  MessageSquare,
   Bot,
   History,
   Train
@@ -30,7 +26,7 @@ interface NavItem {
 export const Sidebar: React.FC = () => {
   const { activeView, setView, currentTrip, searchOrigin, searchDestination } = useTripStore();
 
-  if (!currentTrip || activeView === 'landing' || activeView === 'create-trip') {
+  if (!currentTrip || activeView === 'landing' || activeView === 'create-trip' || activeView === 'auth') {
     return null;
   }
 
@@ -41,14 +37,12 @@ export const Sidebar: React.FC = () => {
     { id: 'door-to-door', label: 'Door-to-Door', icon: DoorClosed },
     { id: 'itinerary', label: 'Daily Itinerary', icon: CalendarDays },
     { id: 'budget', label: 'Reactive Budget', icon: PiggyBank, color: 'text-amber-600' },
-    { id: 'group', label: 'Group & Splits', icon: Users, badge: `${currentTrip.members.length}` },
-    { id: 'safety', label: 'Safety & SOS', icon: ShieldCheck, color: 'text-red-600' },
+    { id: 'group', label: 'Group & Splits', icon: Users, badge: `${currentTrip.members?.length || 0}` },
     { id: 'what-if', label: 'What-If Sandbox', icon: Sparkles, color: 'text-purple-600' },
     { id: 'weather', label: 'Weather Center', icon: CloudSun, color: 'text-sky-600' },
     { id: 'hidden-gems', label: 'Hidden Gems', icon: Gem, color: 'text-emerald-600' },
-    { id: 'chat', label: 'Travel Connect', icon: MessageSquare },
     { id: 'copilot', label: 'Yatra Copilot', icon: Bot, color: 'text-blue-600' },
-    { id: 'history', label: 'History & PDF', icon: History }
+    { id: 'history', label: 'Trip History', icon: History }
   ];
 
   const origin = searchOrigin || currentTrip.trip.origin;
@@ -56,7 +50,6 @@ export const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-60 shrink-0 hidden lg:block bg-white border-r border-slate-200 p-3 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto">
-      
       {/* Active Journey Card */}
       <div className="mb-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
         <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 block mb-0.5">
@@ -108,7 +101,6 @@ export const Sidebar: React.FC = () => {
           );
         })}
       </nav>
-
     </aside>
   );
 };

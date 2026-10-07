@@ -1,8 +1,21 @@
 import { create } from 'zustand';
-import { FullTripData, WeatherCondition, TrainResult, FlightResult } from '../types';
+import {
+  FullTripData,
+  WeatherCondition,
+  TrainResult,
+  FlightResult,
+  User,
+  LoginCredentials,
+  RegisterData,
+  TripSummary,
+  ExpenseSplit,
+  TripCreationPayload,
+  ItineraryActivity
+} from '../types';
 import { api } from '../services/api';
 
 export type AppView =
+  | 'auth'
   | 'landing'
   | 'dashboard'
   | 'create-trip'
@@ -16,8 +29,6 @@ export type AppView =
   | 'weather'
   | 'hidden-gems'
   | 'bookings'
-  | 'safety'
-  | 'chat'
   | 'copilot'
   | 'history';
 
@@ -28,6 +39,13 @@ interface Toast {
 }
 
 interface TripState {
+  // Authentication State
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  userTrips: TripSummary[];
+
+  // App & Trip State
   currentTrip: FullTripData | null;
   activeView: AppView;
   isLoading: boolean;
@@ -42,12 +60,19 @@ interface TripState {
   selectedTrain: TrainResult | null;
   selectedFlight: FlightResult | null;
 
-  // Actions
+  // Auth Actions
+  login: (credentials: LoginCredentials) => Promise<boolean>;
+  register: (data: RegisterData) => Promise<boolean>;
+  logout: () => void;
+  checkAuth: () => Promise<void>;
+  loadUserTrips: () => Promise<void>;
+
+  // Trip & View Actions
   setView: (view: AppView) => void;
   loadDemoTrip: () => Promise<void>;
   loadTrip: (id: string) => Promise<void>;
   setCurrentTrip: (trip: FullTripData) => void;
-  createTrip: (payload: any) => Promise<void>;
+  createTrip: (payload: TripCreationPayload) => Promise<void>;
 
   // Search actions
   setSearchOrigin: (origin: string) => void;
@@ -61,16 +86,35 @@ interface TripState {
   // Reactive Handlers
   updateTravellersCount: (count: number) => Promise<void>;
   updateBudget: (budget: number) => Promise<void>;
-  addExpense: (expense: { title: string; amount: number; category: string; paidByMemberId?: string; notes?: string }) => Promise<void>;
-  updateExpense: (id: string, expense: Partial<{ title: string; amount: number; category: string; paidByMemberId: string; notes: string }>) => Promise<void>;
+  addExpense: (expense: {
+    title: string;
+    amount: number;
+    category: string;
+    paidByMemberId?: string;
+    splitType?: 'Equal' | 'Exact' | 'Custom';
+    splits?: ExpenseSplit[];
+    notes?: string;
+  }) => Promise<void>;
+  updateExpense: (
+    id: string,
+    expense: Partial<{
+      title: string;
+      amount: number;
+      category: string;
+      paidByMemberId: string;
+      splitType?: 'Equal' | 'Exact' | 'Custom';
+      splits?: ExpenseSplit[];
+      notes: string;
+    }>
+  ) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   updateTransportTiming: (transportId: string, depTime: string, arrTime?: string) => Promise<void>;
   simulateWeather: (dayNumber: number, condition: WeatherCondition, autoApply?: boolean) => Promise<void>;
   addHiddenGem: (gemId: string, dayNumber?: number, replaceItemId?: string) => Promise<void>;
   replanItinerary: (reason?: string) => Promise<void>;
-  updateItineraryItem: (itemId: string, patch: any) => Promise<void>;
+  updateItineraryItem: (itemId: string, patch: Partial<ItineraryActivity>) => Promise<void>;
   deleteItineraryItem: (itemId: string) => Promise<void>;
-  addItineraryItem: (item: any) => Promise<void>;
+  addItineraryItem: (item: Partial<ItineraryActivity> & { dayNumber?: number }) => Promise<void>;
   addMember: (member: { name: string; email?: string; phone?: string; role?: string }) => Promise<void>;
   deleteMember: (memberId: string) => Promise<void>;
 
@@ -84,19 +128,27 @@ const savedSearch = (() => {
   try {
     const raw = localStorage.getItem('yatra_search_state');
     return raw ? JSON.parse(raw) : null;
-  } catch (_) {
+  } catch {
     return null;
   }
 })();
 
+const initialToken = localStorage.getItem('yatra360_auth_token');
+
 export const useTripStore = create<TripState>((set, get) => ({
+  // Authentication State
+  user: null,
+  token: initialToken,
+  isAuthenticated: !!initialToken,
+  userTrips: [],
+
   currentTrip: null,
-  activeView: 'landing',
+  activeView: initialToken ? 'dashboard' : 'auth',
   isLoading: false,
   error: null,
   toasts: [],
 
-  // Default values: Meerut -> New Delhi as requested in specification
+  // Default search values
   searchOrigin: savedSearch?.origin || 'Meerut',
   searchDestination: savedSearch?.destination || 'New Delhi',
   searchDate: savedSearch?.date || new Date().toISOString().split('T')[0],
@@ -122,6 +174,111 @@ export const useTripStore = create<TripState>((set, get) => ({
     }));
   },
 
+  // Auth Operations
+  checkAuth: async () => {
+    const token = localStorage.getItem('yatra360_auth_token');
+    if (!token) {
+      set({ isAuthenticated: false, user: null, activeView: 'auth' });
+      return;
+    }
+    try {
+      const res = await api.getMe();
+      if (res && res.user) {
+        set({
+          user: res.user,
+          isAuthenticated: true,
+          token
+        });
+        await get().loadUserTrips();
+        // If currentTrip is not set yet, attempt to restore the most recent trip
+        const trips = get().userTrips;
+        if (!get().currentTrip && trips.length > 0) {
+          await get().loadTrip(trips[0].id);
+        }
+      } else {
+        localStorage.removeItem('yatra360_auth_token');
+        set({ isAuthenticated: false, user: null, activeView: 'auth' });
+      }
+    } catch {
+      localStorage.removeItem('yatra360_auth_token');
+      set({ isAuthenticated: false, user: null, activeView: 'auth' });
+    }
+  },
+
+  login: async (credentials) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await api.login(credentials);
+      localStorage.setItem('yatra360_auth_token', res.token);
+      set({
+        user: res.user,
+        token: res.token,
+        isAuthenticated: true,
+        isLoading: false,
+        activeView: 'dashboard'
+      });
+      get().addToast(`Welcome back, ${res.user.name}!`, 'success');
+      await get().loadUserTrips();
+      const trips = get().userTrips;
+      if (trips.length > 0) {
+        await get().loadTrip(trips[0].id);
+      }
+      return true;
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Login failed';
+      set({ isLoading: false, error: errorMsg });
+      get().addToast(errorMsg, 'error');
+      return false;
+    }
+  },
+
+  register: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await api.register(data);
+      localStorage.setItem('yatra360_auth_token', res.token);
+      set({
+        user: res.user,
+        token: res.token,
+        isAuthenticated: true,
+        isLoading: false,
+        activeView: 'dashboard',
+        userTrips: [],
+        currentTrip: null
+      });
+      get().addToast(`Account created successfully! Welcome to Yatraa360.`, 'success');
+      return true;
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Registration failed';
+      set({ isLoading: false, error: errorMsg });
+      get().addToast(errorMsg, 'error');
+      return false;
+    }
+  },
+
+  logout: () => {
+    localStorage.removeItem('yatra360_auth_token');
+    localStorage.removeItem('yatra360_active_trip');
+    set({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      currentTrip: null,
+      userTrips: [],
+      activeView: 'auth'
+    });
+    get().addToast('Signed out successfully.', 'info');
+  },
+
+  loadUserTrips: async () => {
+    try {
+      const trips = await api.getTrips();
+      set({ userTrips: trips });
+    } catch {
+      set({ userTrips: [] });
+    }
+  },
+
   setCurrentTrip: (trip) => {
     set({
       currentTrip: trip,
@@ -130,7 +287,9 @@ export const useTripStore = create<TripState>((set, get) => ({
     });
     try {
       localStorage.setItem('yatra360_active_trip', JSON.stringify(trip));
-    } catch (_) {}
+    } catch {
+      // Ignore storage errors
+    }
   },
 
   setSearchOrigin: (origin) => {
@@ -143,7 +302,9 @@ export const useTripStore = create<TripState>((set, get) => ({
         travelMode: get().travelMode
       };
       localStorage.setItem('yatra_search_state', JSON.stringify(state));
-    } catch (_) {}
+    } catch {
+      // Ignore storage errors
+    }
   },
 
   setSearchDestination: (dest) => {
@@ -156,7 +317,9 @@ export const useTripStore = create<TripState>((set, get) => ({
         travelMode: get().travelMode
       };
       localStorage.setItem('yatra_search_state', JSON.stringify(state));
-    } catch (_) {}
+    } catch {
+      // Ignore storage errors
+    }
   },
 
   setSearchDate: (date) => {
@@ -169,7 +332,9 @@ export const useTripStore = create<TripState>((set, get) => ({
         travelMode: get().travelMode
       };
       localStorage.setItem('yatra_search_state', JSON.stringify(state));
-    } catch (_) {}
+    } catch {
+      // Ignore storage errors
+    }
   },
 
   setTravelMode: (mode) => {
@@ -182,7 +347,9 @@ export const useTripStore = create<TripState>((set, get) => ({
         travelMode: mode
       };
       localStorage.setItem('yatra_search_state', JSON.stringify(state));
-    } catch (_) {}
+    } catch {
+      // Ignore storage errors
+    }
   },
 
   swapSearchLocations: () => {
@@ -214,9 +381,13 @@ export const useTripStore = create<TripState>((set, get) => ({
           status: 'Selected'
         });
         set({ currentTrip: updated });
-        get().addToast(`Selected ${train.trainName} (${selectedClass?.classCode} - ₹${fare.toLocaleString('en-IN')}). Journey updated!`, 'success');
-      } catch (err: any) {
-        get().addToast(err.message, 'error');
+        get().addToast(
+          `Selected ${train.trainName} (${selectedClass?.classCode} - ₹${fare.toLocaleString('en-IN')}). Journey updated!`,
+          'success'
+        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Failed to select transport';
+        get().addToast(msg, 'error');
       }
     } else {
       get().addToast(`Selected ${train.trainName} (${selectedClass?.classCode})`, 'success');
@@ -242,9 +413,13 @@ export const useTripStore = create<TripState>((set, get) => ({
           status: 'Selected'
         });
         set({ currentTrip: updated });
-        get().addToast(`Selected ${flight.airline} ${flight.flightNumber} (₹${totalFare.toLocaleString('en-IN')}). Journey updated!`, 'success');
-      } catch (err: any) {
-        get().addToast(err.message, 'error');
+        get().addToast(
+          `Selected ${flight.airline} ${flight.flightNumber} (₹${totalFare.toLocaleString('en-IN')}). Journey updated!`,
+          'success'
+        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Failed to select transport';
+        get().addToast(msg, 'error');
       }
     } else {
       get().addToast(`Selected ${flight.airline} ${flight.flightNumber}`, 'success');
@@ -262,9 +437,10 @@ export const useTripStore = create<TripState>((set, get) => ({
         activeView: 'dashboard',
         isLoading: false
       });
-      get().addToast(`Loaded ${trip.trip.origin} ➔ ${trip.trip.destination} Journey`, 'success');
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+      get().addToast(`Loaded ${trip.trip.origin} ➔ ${trip.trip.destination} Demo Journey`, 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Could not load demo trip';
+      set({ error: msg, isLoading: false });
       get().addToast('Could not load demo trip', 'error');
     }
   },
@@ -279,8 +455,9 @@ export const useTripStore = create<TripState>((set, get) => ({
         searchDestination: trip.trip.destination,
         isLoading: false
       });
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load trip';
+      set({ error: msg, isLoading: false });
     }
   },
 
@@ -295,9 +472,11 @@ export const useTripStore = create<TripState>((set, get) => ({
         activeView: 'dashboard',
         isLoading: false
       });
+      await get().loadUserTrips();
       get().addToast(`Created journey to ${trip.trip.destination}!`, 'success');
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create trip';
+      set({ error: msg, isLoading: false });
       get().addToast('Failed to create trip', 'error');
     }
   },
@@ -309,8 +488,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.updateTrip(trip.trip.id, { travellersCount: count });
       set({ currentTrip: updated });
       get().addToast(`Traveller count updated to ${count}. Rooms & splits recalculated.`, 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Update failed';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -321,8 +501,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.updateTrip(trip.trip.id, { budget });
       set({ currentTrip: updated });
       get().addToast(`Total budget updated to ₹${budget.toLocaleString('en-IN')}. Remaining balance recalculated.`, 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Update failed';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -332,9 +513,13 @@ export const useTripStore = create<TripState>((set, get) => ({
     try {
       const updated = await api.addExpense(trip.trip.id, expense);
       set({ currentTrip: updated });
-      get().addToast(`Added ₹${expense.amount.toLocaleString('en-IN')} expense (${expense.category}). Real-time budget updated!`, 'success');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+      get().addToast(
+        `Added ₹${expense.amount.toLocaleString('en-IN')} expense (${expense.category}). Real-time budget & settlement updated!`,
+        'success'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to add expense';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -344,9 +529,10 @@ export const useTripStore = create<TripState>((set, get) => ({
     try {
       const updated = await api.updateExpense(trip.trip.id, id, expense);
       set({ currentTrip: updated });
-      get().addToast('Expense updated and budget balance refreshed.', 'success');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+      get().addToast('Expense updated and budget & settlement refreshed.', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update expense';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -356,9 +542,10 @@ export const useTripStore = create<TripState>((set, get) => ({
     try {
       const updated = await api.deleteExpense(trip.trip.id, id);
       set({ currentTrip: updated });
-      get().addToast('Expense removed and budget recalculated.', 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+      get().addToast('Expense removed and settlement recalculated.', 'info');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete expense';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -369,8 +556,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.updateTransportTiming(trip.trip.id, transportId, depTime, arrTime);
       set({ currentTrip: updated });
       get().addToast(`Transport timing shifted to ${depTime}. Schedule updated.`, 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update timing';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -381,8 +569,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.simulateWeather(trip.trip.id, dayNumber, condition, autoApply);
       set({ currentTrip: updated });
       get().addToast(`Simulated ${condition} on Day ${dayNumber}. Weather alternatives updated.`, 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to simulate weather';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -393,8 +582,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.addHiddenGem(trip.trip.id, gemId, dayNumber, replaceItemId);
       set({ currentTrip: updated });
       get().addToast('Location integrated into itinerary.', 'success');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to add location';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -405,8 +595,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.replanItinerary(trip.trip.id, reason);
       set({ currentTrip: updated });
       get().addToast('Itinerary optimized while preserving your custom items.', 'success');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to replan itinerary';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -417,8 +608,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.updateItineraryItem(trip.trip.id, itemId, patch);
       set({ currentTrip: updated });
       get().addToast('Itinerary activity updated.', 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update activity';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -429,8 +621,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.deleteItineraryItem(trip.trip.id, itemId);
       set({ currentTrip: updated });
       get().addToast('Activity removed from itinerary.', 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete activity';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -441,8 +634,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       const updated = await api.addItineraryItem(trip.trip.id, item);
       set({ currentTrip: updated });
       get().addToast('Custom activity added.', 'success');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to add activity';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -452,9 +646,10 @@ export const useTripStore = create<TripState>((set, get) => ({
     try {
       const updated = await api.addMember(trip.trip.id, member);
       set({ currentTrip: updated });
-      get().addToast(`Added ${member.name}. Expense splits updated.`, 'success');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+      get().addToast(`Added ${member.name}. Expense settlement updated.`, 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to add member';
+      get().addToast(msg, 'error');
     }
   },
 
@@ -464,9 +659,10 @@ export const useTripStore = create<TripState>((set, get) => ({
     try {
       const updated = await api.deleteMember(trip.trip.id, memberId);
       set({ currentTrip: updated });
-      get().addToast('Member removed and group splits recalculated.', 'info');
-    } catch (err: any) {
-      get().addToast(err.message, 'error');
+      get().addToast('Member removed and group settlement recalculated.', 'info');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete member';
+      get().addToast(msg, 'error');
     }
   }
 }));

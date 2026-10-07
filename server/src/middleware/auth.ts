@@ -1,0 +1,41 @@
+import { Request, Response, NextFunction } from 'express';
+import { AuthService } from '../services/auth-service';
+
+export interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+  };
+}
+
+export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ success: false, error: 'Authentication required. Missing Bearer token.' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
+  const payload = AuthService.verifyToken(token);
+
+  if (!payload) {
+    res.status(401).json({ success: false, error: 'Invalid or expired authentication token.' });
+    return;
+  }
+
+  req.user = payload;
+  next();
+}
+
+export function optionalAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const payload = AuthService.verifyToken(token);
+    if (payload) {
+      req.user = payload;
+    }
+  }
+  next();
+}

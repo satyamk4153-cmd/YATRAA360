@@ -57,7 +57,7 @@ export const CopilotView: React.FC = () => {
     { label: 'Hidden Gems', icon: Sparkles, question: "What are the best offbeat places and hidden gems to visit?" },
     { label: 'Local Food', icon: Coffee, question: "What are the best local food and dining recommendations?" },
     { label: 'Packing Checklist', icon: Luggage, question: "What clothes and essentials should I pack for this trip?" },
-    { label: 'Safety & Emergency', icon: ShieldCheck, question: "What are the emergency contact numbers and hospital helplines?" }
+    { label: 'Road & Transit', icon: Compass, question: "What is the best road route and transit timing between our origin and destination?" }
   ];
 
   const handleAsk = async (questionText: string) => {

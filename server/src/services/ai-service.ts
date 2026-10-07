@@ -362,101 +362,394 @@ export class AIService {
           }
         ];
       } else {
-        theme = `Valley Adventure, Hidden Wonders & Scenic Trails`;
-        items = [
-          {
-            id: `item_${Date.now()}_${d}_1`,
-            dayId: `day_${d}`,
-            tripId,
-            title: 'Scenic Valley Panoramic Trek & Pine Forest Walk',
-            description: `Guided morning nature hike through pristine pine forests, visiting fresh alpine streams and vantage viewpoints.`,
-            category: 'Activity',
-            startTime: '09:00 AM',
-            endTime: '01:00 PM',
-            location: 'Solang Valley Nature Trail',
-            cost: 950,
-            status: 'Planned',
-            isLocked: false,
-            isUserModified: false,
-            isWeatherSensitive: true,
-            weatherAlternative: {
-              title: 'Himalayan Art, Culture & Heritage Museum',
-              description: 'State-of-the-art interactive cultural gallery displaying folk wooden architecture, traditional textiles, and virtual valley tour.',
-              category: 'Sightseeing',
-              location: 'Himalayan Heritage Complex',
-              cost: 500,
-              indoorReason: 'Completely indoor climate-controlled sanctuary safe from rain and muddy tracks.'
-            },
-            lat: 32.3167,
-            lng: 77.1667,
-            orderIndex: 1
-          },
-          {
-            id: `item_${Date.now()}_${d}_2`,
-            dayId: `day_${d}`,
-            tripId,
-            title: 'Traditional Himachali Dham Feast',
-            description: `Authentic multi-course traditional meal served on leaf platters, curated with local grains and organic spices.`,
-            category: 'Food',
-            startTime: '01:30 PM',
-            endTime: '03:00 PM',
-            location: 'Naggar Traditional Rasoi',
-            cost: 1100,
-            status: 'Planned',
-            isLocked: false,
-            isUserModified: false,
-            isWeatherSensitive: false,
-            lat: 32.1464,
-            lng: 77.1685,
-            orderIndex: 2
-          },
-          {
-            id: `item_${Date.now()}_${d}_3`,
-            dayId: `day_${d}`,
-            tripId,
-            title: 'Historic Castle & Woodcraft Workshop',
-            description: `Explore centuries-old wooden stone architecture and meet local artisan woodcarvers.`,
-            category: 'Sightseeing',
-            startTime: '03:30 PM',
-            endTime: '06:00 PM',
-            location: 'Naggar Castle & Guild',
-            cost: 600,
-            status: 'Planned',
-            isLocked: false,
-            isUserModified: false,
-            isWeatherSensitive: false,
-            lat: 32.1464,
-            lng: 77.1685,
-            orderIndex: 3
-          },
-          {
-            id: `item_${Date.now()}_${d}_4`,
-            dayId: `day_${d}`,
-            tripId,
-            title: 'Campfire Gathering & Stargazing Session',
-            description: `Gather around the open fire with warm local apple cider and acoustic music.`,
-            category: 'Activity',
-            startTime: '07:30 PM',
-            endTime: '09:30 PM',
-            location: 'Retreat Courtyard',
-            cost: 400,
-            status: 'Planned',
-            isLocked: false,
-            isUserModified: false,
-            isWeatherSensitive: true,
-            weatherAlternative: {
-              title: 'Indoor Board Games & Boarding Lounge Evening',
-              description: 'Warm indoor fireside lounge with hot cocoa, board games, and travel trivia with fellow travellers.',
-              category: 'Rest',
-              location: 'Hotel Fireside Library Lounge',
-              cost: 200,
-              indoorReason: 'Protected from mountain thunderstorm.'
-            },
-            lat: 32.2396,
-            lng: 77.1887,
-            orderIndex: 4
+        const destLower = (params.destination || '').toLowerCase();
+        const isJaipur = destLower.includes('jaipur') || destLower.includes('rajasthan');
+        const isGoa = destLower.includes('goa');
+        const isDelhi = destLower.includes('delhi');
+        const isManali = destLower.includes('manali') || destLower.includes('kullu') || destLower.includes('himachal');
+
+        if (isJaipur) {
+          if (d % 2 === 0) {
+            theme = `Royal Citadel, Amer Fort & Nahargarh Sunset`;
+            items = [
+              {
+                id: `item_${Date.now()}_${d}_1`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Amer Fort & Panna Meena Stepwell Exploration',
+                description: 'Explore the grand 16th-century hill fortress, Sheesh Mahal mirror palace, and adjacent ancient geometric stepwell.',
+                category: 'Sightseeing',
+                startTime: '08:30 AM',
+                endTime: '12:30 PM',
+                location: 'Amer Fort & Stepwell Complex',
+                cost: 850,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: true,
+                weatherAlternative: {
+                  title: 'Anokhi Museum of Hand Printing & Indigo Guild',
+                  description: 'Indoor climate-shielded museum with traditional textile preservation, live block carvers, and air-cooled halls.',
+                  category: 'Culture',
+                  location: 'Kheri Gate Heritage Haveli',
+                  cost: 300,
+                  indoorReason: 'Indoor museum safe from direct afternoon heat or monsoon showers.'
+                },
+                lat: 26.9855,
+                lng: 75.8513,
+                orderIndex: 1
+              },
+              {
+                id: `item_${Date.now()}_${d}_2`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Authentic Rajasthani Thali Luncheon',
+                description: 'Multi-dish royal culinary spread featuring Dal Baati Churma, Gatte ki Sabzi, and saffron lassi.',
+                category: 'Food',
+                startTime: '01:00 PM',
+                endTime: '02:30 PM',
+                location: 'Amer Heritage Thali Rasoi',
+                cost: 950,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: false,
+                lat: 26.9800,
+                lng: 75.8480,
+                orderIndex: 2
+              },
+              {
+                id: `item_${Date.now()}_${d}_3`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Hawa Mahal & City Palace Royal Quarters',
+                description: 'Admire the 953 honeycombed jharokha lattice windows and royal armory artifacts inside the Pink City.',
+                category: 'Sightseeing',
+                startTime: '03:30 PM',
+                endTime: '05:30 PM',
+                location: 'Hawa Mahal Rd, Badi Choupad',
+                cost: 500,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: false,
+                lat: 26.9239,
+                lng: 75.8267,
+                orderIndex: 3
+              },
+              {
+                id: `item_${Date.now()}_${d}_4`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Nahargarh Fort Clifftop Sunset & Rooftop Cafe',
+                description: 'Spectacular sunset panorama over the illuminated Pink City skyline from the ancient ramparts of Nahargarh.',
+                category: 'Activity',
+                startTime: '06:00 PM',
+                endTime: '08:30 PM',
+                location: 'Nahargarh Fort Ridge',
+                cost: 400,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: true,
+                weatherAlternative: {
+                  title: 'Chokhi Dhani Indoor Cultural Village & Folk Dance',
+                  description: 'Vibrant indoor pavilions featuring traditional Kalbeliya dance, puppetry, and heritage hospitality.',
+                  category: 'Culture',
+                  location: 'Tonk Road Ethnic Resort',
+                  cost: 1100,
+                  indoorReason: 'Covered pavilions shielded from evening rain.'
+                },
+                lat: 26.9380,
+                lng: 75.8155,
+                orderIndex: 4
+              }
+            ];
+          } else {
+            theme = `Hidden Stepwells, Johari Bazaar & Artisan Guilds`;
+            items = [
+              {
+                id: `item_${Date.now()}_${d}_1`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Galta Ji Sun Temple & Sacred Valley Springs',
+                description: 'Peaceful morning walk through the scenic mountain cleft visiting ancient natural springs and pavilion shrines.',
+                category: 'Culture',
+                startTime: '08:00 AM',
+                endTime: '11:00 AM',
+                location: 'Galta Valley Kunds',
+                cost: 0,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: true,
+                weatherAlternative: {
+                  title: 'Albert Hall Museum Gallery Tour',
+                  description: 'State central museum with rare Persian carpets, miniature paintings, and stone sculptures in Indo-Saracenic halls.',
+                  category: 'Sightseeing',
+                  location: 'Ram Niwas Garden',
+                  cost: 300,
+                  indoorReason: 'Spacious climate-controlled museum safe from adverse weather.'
+                },
+                lat: 26.9158,
+                lng: 75.8622,
+                orderIndex: 1
+              },
+              {
+                id: `item_${Date.now()}_${d}_2`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Traditional Kachori & Street Food Crawl',
+                description: 'Sample world-famous Pyaaz Kachori, Ghevar, and sweet Lassi in the historic walled bazaars.',
+                category: 'Food',
+                startTime: '12:00 PM',
+                endTime: '02:00 PM',
+                location: 'Johari Bazaar & MI Road Heritage Lane',
+                cost: 650,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: false,
+                lat: 26.9200,
+                lng: 75.8200,
+                orderIndex: 2
+              },
+              {
+                id: `item_${Date.now()}_${d}_3`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Gaitore Royal Marble Cenotaphs Tour',
+                description: 'Wander through exquisitely carved white marble royal chhatris in an uncrowded mountain amphitheater.',
+                category: 'Sightseeing',
+                startTime: '03:00 PM',
+                endTime: '05:00 PM',
+                location: 'Gaitore Ki Chhatriyan',
+                cost: 50,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: false,
+                lat: 26.9402,
+                lng: 75.8247,
+                orderIndex: 3
+              },
+              {
+                id: `item_${Date.now()}_${d}_4`,
+                dayId: `day_${d}`,
+                tripId,
+                title: 'Bapu Bazaar Handicrafts & Evening Light Show',
+                description: 'Browse authentic mojaris, blue pottery, and bandhani textiles, followed by the Amber Fort sound & light show.',
+                category: 'Activity',
+                startTime: '05:30 PM',
+                endTime: '08:30 PM',
+                location: 'Bapu Bazaar Heritage Market',
+                cost: 500,
+                status: 'Planned',
+                isLocked: false,
+                isUserModified: false,
+                isWeatherSensitive: false,
+                lat: 26.9180,
+                lng: 75.8240,
+                orderIndex: 4
+              }
+            ];
           }
-        ];
+        } else if (isGoa) {
+          theme = `Coastal Heritage, Island Ferries & Sunset Coves`;
+          items = [
+            {
+              id: `item_${Date.now()}_${d}_1`,
+              dayId: `day_${d}`,
+              tripId,
+              title: 'Fontainhas Latin Quarter Walking Tour',
+              description: 'Morning guided stroll through pastel-painted Portuguese villas, heritage azulejo tile studios, and heritage bakeries.',
+              category: 'Culture',
+              startTime: '08:30 AM',
+              endTime: '11:30 AM',
+              location: 'Altinho, Panaji',
+              cost: 300,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: true,
+              weatherAlternative: {
+                title: 'Houses of Goa Architectural Museum',
+                description: 'Unique multi-level ship-shaped museum showcasing Indo-Portuguese home architecture and antique woodwork.',
+                category: 'Sightseeing',
+                location: 'Salvador do Mundo',
+                cost: 250,
+                indoorReason: 'Protected dry indoor gallery.'
+              },
+              lat: 15.4989,
+              lng: 73.8312,
+              orderIndex: 1
+            },
+            {
+              id: `item_${Date.now()}_${d}_2`,
+              dayId: `day_${d}`,
+              tripId,
+              title: 'Authentic Goan Seafood / Thali Feast',
+              description: 'Fresh local coastal fish thali with sol kadhi, prawn curry, and traditional poi bread.',
+              category: 'Food',
+              startTime: '01:00 PM',
+              endTime: '02:30 PM',
+              location: 'Old Town Heritage Tavern',
+              cost: 1100,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: false,
+              lat: 15.5000,
+              lng: 73.8350,
+              orderIndex: 2
+            },
+            {
+              id: `item_${Date.now()}_${d}_3`,
+              dayId: `day_${d}`,
+              tripId,
+              title: 'Divar Island Ferry Crossing & Paddy Fields',
+              description: 'River ferry crossing to the quiet island of Divar, cycling past centuries-old churches and backwater canals.',
+              category: 'Activity',
+              startTime: '03:30 PM',
+              endTime: '05:30 PM',
+              location: 'Divar Island Ferry Terminal',
+              cost: 100,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: true,
+              weatherAlternative: {
+                title: 'Reis Magos Fort Indoor Heritage Gallery',
+                description: 'Restored 1551 fortress with indoor weapons gallery, prison halls, and Mario Miranda cartoon exhibits.',
+                category: 'Sightseeing',
+                location: 'Verem Foothills',
+                cost: 200,
+                indoorReason: 'Covered ramparts and indoor exhibition halls.'
+              },
+              lat: 15.5186,
+              lng: 73.9015,
+              orderIndex: 3
+            },
+            {
+              id: `item_${Date.now()}_${d}_4`,
+              dayId: `day_${d}`,
+              tripId,
+              title: 'Cabo de Rama Sunset Cliff Lounge',
+              description: 'Panoramic clifftop sunset overlooking the Arabian Sea with cool ocean breeze and live acoustic music.',
+              category: 'Activity',
+              startTime: '06:00 PM',
+              endTime: '08:30 PM',
+              location: 'Cabo de Rama Coastal Ridge',
+              cost: 500,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: false,
+              lat: 15.0886,
+              lng: 73.9212,
+              orderIndex: 4
+            }
+          ];
+        } else {
+          // Default / Mountains / Other Indian Destinations
+          theme = d % 2 === 0
+            ? `Hidden Discoveries & Heritage Trail in ${params.destination}`
+            : `Scenic Vistas, Local Flavors & Cultural Immersion in ${params.destination}`;
+          items = [
+            {
+              id: `item_${Date.now()}_${d}_1`,
+              dayId: `day_${d}`,
+              tripId,
+              title: `${params.destination} Landmark & Nature Trail`,
+              description: `Guided morning nature hike through scenic viewpoints, pristine parks, and historical vantage spots in ${params.destination}.`,
+              category: 'Activity',
+              startTime: '09:00 AM',
+              endTime: '01:00 PM',
+              location: `${params.destination} Scenic Route`,
+              cost: 650,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: true,
+              weatherAlternative: {
+                title: `${params.destination} Heritage Museum & Art Gallery`,
+                description: 'Interactive cultural gallery showcasing regional handicrafts, traditional architecture, and folk heritage.',
+                category: 'Sightseeing',
+                location: `${params.destination} Heritage Complex`,
+                cost: 350,
+                indoorReason: 'Completely indoor climate-controlled sanctuary safe from rain and weather.'
+              },
+              lat: 28.6139,
+              lng: 77.2090,
+              orderIndex: 1
+            },
+            {
+              id: `item_${Date.now()}_${d}_2`,
+              dayId: `day_${d}`,
+              tripId,
+              title: `Traditional Regional Gastronomic Feast`,
+              description: `Authentic multi-course meal served with local spices, fresh bread, and regional sweet delicacies.`,
+              category: 'Food',
+              startTime: '01:30 PM',
+              endTime: '03:00 PM',
+              location: `${params.destination} Traditional Rasoi`,
+              cost: 900,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: false,
+              lat: 28.6200,
+              lng: 77.2100,
+              orderIndex: 2
+            },
+            {
+              id: `item_${Date.now()}_${d}_3`,
+              dayId: `day_${d}`,
+              tripId,
+              title: `Historic Quarter & Artisan Craft Guild`,
+              description: `Explore centuries-old architecture and meet local artisan master craftsmen in their studios.`,
+              category: 'Sightseeing',
+              startTime: '03:30 PM',
+              endTime: '06:00 PM',
+              location: `${params.destination} Old Quarter`,
+              cost: 400,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: false,
+              lat: 28.6250,
+              lng: 77.2150,
+              orderIndex: 3
+            },
+            {
+              id: `item_${Date.now()}_${d}_4`,
+              dayId: `day_${d}`,
+              tripId,
+              title: `Evening Cultural Gathering & Stargazing`,
+              description: `Gather for warm local tea, traditional acoustic music, and evening relaxation with fellow travellers.`,
+              category: 'Activity',
+              startTime: '07:30 PM',
+              endTime: '09:30 PM',
+              location: `${params.destination} Evening Courtyard`,
+              cost: 350,
+              status: 'Planned',
+              isLocked: false,
+              isUserModified: false,
+              isWeatherSensitive: true,
+              weatherAlternative: {
+                title: 'Indoor Fireside Lounge & Travel Trivia Evening',
+                description: 'Warm indoor lounge with board games, hot cocoa, and travel tales with fellow travellers.',
+                category: 'Rest',
+                location: 'Hotel Fireside Lounge',
+                cost: 200,
+                indoorReason: 'Protected from outdoor evening rain or cold.'
+              },
+              lat: 28.6180,
+              lng: 77.2050,
+              orderIndex: 4
+            }
+          ];
+        }
       }
 
       itinerary.push({
@@ -466,75 +759,18 @@ export class AIService {
         date: dateStr,
         theme,
         weatherForecast: {
-          condition: d === 2 ? 'Sunny' : 'Partly Cloudy',
-          tempC: d === 2 ? 18 : 16,
-          precipitationChance: d === 2 ? 10 : 20,
+          condition: d % 3 === 0 ? 'Partly Cloudy' : 'Sunny',
+          tempC: d % 2 === 0 ? 26 : 24,
+          precipitationChance: d % 3 === 0 ? 15 : 5,
           alertLevel: 'None',
-          summary: 'Pleasant mountain weather ideal for outdoor trails and sightseeing.'
+          summary: `Pleasant weather in ${params.destination} ideal for sightseeing and outdoor trails.`
         },
         items
       });
     }
 
-    const hiddenGems: HiddenGem[] = [
-      {
-        id: `gem_1`,
-        tripId,
-        destinationCity: params.destination,
-        name: 'Jogini Falls Secret Upper Trail',
-        description: 'Less-trodden trail above the main waterfall cascading over granite cliffs, flanked by apple orchards.',
-        category: 'Nature & Trek',
-        location: 'Vashisht Upper Woods',
-        distance: '4.2 km from City Center',
-        crowdLevel: 'Low',
-        cost: 0,
-        openingHours: '06:00 AM - 05:30 PM',
-        safetyInfo: 'Moderate elevation gain; wear trekking shoes with good grip.',
-        bestTime: 'Morning (08:00 AM - 11:00 AM)',
-        lat: 32.268,
-        lng: 77.195,
-        imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80',
-        isSaved: true
-      },
-      {
-        id: `gem_2`,
-        tripId,
-        destinationCity: params.destination,
-        name: 'Sajla Ancient Vishnu Temple & Cedar Grove',
-        description: 'Intricately carved 12th-century stone shrine surrounded by towering deodar trees and organic cafes.',
-        category: 'Heritage',
-        location: 'Sajla Village',
-        distance: '10.5 km south along Left Bank',
-        crowdLevel: 'Very Low',
-        cost: 50,
-        openingHours: '07:00 AM - 07:00 PM',
-        safetyInfo: 'Quiet rural village, respect local sanctum photography guidelines.',
-        bestTime: 'Afternoon (02:00 PM - 04:30 PM)',
-        lat: 32.185,
-        lng: 77.172,
-        imageUrl: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=600&q=80',
-        isSaved: false
-      },
-      {
-        id: `gem_3`,
-        tripId,
-        destinationCity: params.destination,
-        name: 'Gauri Shankar Temple Stone Carvings',
-        description: 'Protected medieval shrine displaying remarkable Gupta-influenced Himalayan stone craft.',
-        category: 'Culture & Architecture',
-        location: 'Lower Naggar',
-        distance: '19 km from Mall Road',
-        crowdLevel: 'Low',
-        cost: 0,
-        openingHours: '06:00 AM - 08:00 PM',
-        safetyInfo: 'Easy accessibility with paved pathways.',
-        bestTime: 'Sunset (05:00 PM - 06:30 PM)',
-        lat: 32.146,
-        lng: 77.168,
-        imageUrl: 'https://images.unsplash.com/photo-1528728329032-2972f65dfb3f?auto=format&fit=crop&w=600&q=80',
-        isSaved: false
-      }
-    ];
+    const hiddenGems: HiddenGem[] = TravelDataService.getHiddenGemsForDestination(params.destination, tripId);
+
 
     const weather: WeatherSnapshot[] = itinerary.map(day => ({
       id: `w_snap_${day.dayNumber}`,
@@ -593,7 +829,6 @@ export class AIService {
     const accommodations = tripData.accommodations;
     const expenses = tripData.expenses;
     const hiddenGems = tripData.hiddenGems || [];
-    const emergencyContacts = tripData.emergencyContacts || [];
 
     // 1. Weather / Rain / Monsoon / Temperature
     if (q.includes('rain') || q.includes('raining') || q.includes('weather') || q.includes('forecast') || q.includes('temp') || q.includes('climate')) {
@@ -604,7 +839,7 @@ export class AIService {
         .join('\n');
 
       const weatherList = weather.slice(0, 4).map(w => 
-        `• **${w.date} (${w.condition})**: ${w.tempC}°C (Rain probability: ${w.rainProbability}%, Alert: ${w.alertLevel})`
+        `• **${w.date} (${w.condition})**: ${w.tempC}°C (Rain probability: ${w.precipitationChance}%, Alert: ${w.alertLevel})`
       ).join('\n');
 
       return `🌦️ **Live Weather Intelligence & Advisory (${trip.destination}):**
@@ -645,27 +880,35 @@ ${metrics.spendingAlerts.length > 0 ? `⚠️ **Alert:** ${metrics.spendingAlert
     }
 
     // 3. Group balances / Splitting / Who owes who / Settle up
-    if (q.includes('owe') || q.includes('split') || q.includes('balances') || q.includes('settle') || q.includes('share') || q.includes('paid')) {
+    if (q.includes('owe') || q.includes('split') || q.includes('balances') || q.includes('settle') || q.includes('share') || q.includes('paid') || q.includes('settlement')) {
       const balanceDetails = metrics.groupBalances
         .map(b => {
           if (b.netBalance > 0) {
-            return `• **${b.name}**: Paid ₹${b.paid.toLocaleString('en-IN')} ➔ *Gets back ₹${b.netBalance.toLocaleString('en-IN')}*`;
+            return `• **${b.name}**: Paid ₹${b.paid.toLocaleString('en-IN')} (Fair Share: ₹${b.shouldPay.toLocaleString('en-IN')}) ➔ *Receives ₹${b.netBalance.toLocaleString('en-IN')}*`;
           } else if (b.netBalance < 0) {
-            return `• **${b.name}**: Paid ₹${b.paid.toLocaleString('en-IN')} ➔ *Owes ₹${Math.abs(b.netBalance).toLocaleString('en-IN')}*`;
+            return `• **${b.name}**: Paid ₹${b.paid.toLocaleString('en-IN')} (Fair Share: ₹${b.shouldPay.toLocaleString('en-IN')}) ➔ *Owes ₹${Math.abs(b.netBalance).toLocaleString('en-IN')}*`;
           } else {
-            return `• **${b.name}**: Paid ₹${b.paid.toLocaleString('en-IN')} ➔ *Fully settled (₹0)*`;
+            return `• **${b.name}**: Paid ₹${b.paid.toLocaleString('en-IN')} (Fair Share: ₹${b.shouldPay.toLocaleString('en-IN')}) ➔ *Settled (₹0)*`;
           }
         })
         .join('\n');
 
-      return `👥 **Live Group Expense Split (${members.length} Members):**
+      const settlementDetails = metrics.settlements && metrics.settlements.length > 0
+        ? metrics.settlements.map(s => `• **${s.fromMemberName}** pays **${s.toMemberName}** **₹${s.amount.toLocaleString('en-IN')}**`).join('\n')
+        : '• No outstanding settlements. All balances are balanced!';
+
+      return `👥 **Live Group Expense Settlement Plan (${members.length} Members):**
 
 Total Group Spending: **₹${metrics.totalSpent.toLocaleString('en-IN')}**
 Equal Fair Share: **₹${Math.round(metrics.totalSpent / Math.max(1, members.length)).toLocaleString('en-IN')}** per member
 
+📊 **Member Net Balances:**
 ${balanceDetails}
 
-💡 **Action Tip:** Go to **Group Manager** ➔ **Settle Up** to record UPI transactions or generate payment links for instant settlement!`;
+🤝 **Who Pays Whom (Optimal Settlements):**
+${settlementDetails}
+
+💡 **Action Tip:** Check the **Group & Splits** view for full details and UPI settlements!`;
     }
 
     // 4. Schedule / Tomorrow / Today / Itinerary / Plan / Timeline
@@ -720,7 +963,7 @@ ${retTransport ? `• **Return Leg (${retTransport?.type || 'Train'}):**
 • **Location:** ${stay?.address || trip.destination}
 • **Rooms Booked:** ${stay?.roomCount || 1} Rooms for ${trip.travellersCount} travellers
 • **Check-in:** ${stay?.checkIn || '12:00 PM'} | **Check-out:** ${stay?.checkOut || '11:00 AM'}
-• **Total Stay Cost:** ₹${stay?.totalCost?.toLocaleString('en-IN') || '4,500'} (${stay?.status || 'Confirmed'})
+• **Total Stay Cost:** ₹${stay?.totalPrice?.toLocaleString('en-IN') || '4,500'} (Confirmed)
 • **Amenities:** Free Wi-Fi, Breakfast Included, 24/7 Front Desk, Luggage Storage
 
 💡 Need an extra room or early check-in? You can manage stay details and simulate room upgrades in the **What-If Sandbox**!`;
@@ -729,7 +972,7 @@ ${retTransport ? `• **Return Leg (${retTransport?.type || 'Train'}):**
     // 7. Hidden gems / Offbeat places / Sightseeing / Recommendations
     if (q.includes('hidden gem') || q.includes('gem') || q.includes('offbeat') || q.includes('recommend') || q.includes('places to visit') || q.includes('must visit') || q.includes('secret')) {
       const gemsList = hiddenGems.slice(0, 3).map(g => 
-        `• **${g.title}** (${g.bestTime}): ${g.description} — *Local tip: ${g.insiderTip}* (Est: ₹${g.estimatedCost})`
+        `• **${g.name}** (${g.bestTime}): ${g.description} — *Local safety tip: ${g.safetyInfo}* (Est: ₹${g.cost})`
       ).join('\n\n');
 
       return `💎 **Curated Offbeat Gems for ${trip.destination}:**
@@ -764,20 +1007,14 @@ ${gemsList || '• **Old Bazaar Heritage Walk**: Early morning walking trail thr
 • **Weather Shield:** Compact umbrella or light waterproof jacket (current forecast: ${weather[0]?.condition || 'Clear'}).`;
     }
 
-    // 10. Safety / Emergency / Hospital / Police / SOS / Helpline
-    if (q.includes('safe') || q.includes('safety') || q.includes('emergency') || q.includes('police') || q.includes('hospital') || q.includes('sos') || q.includes('doctor') || q.includes('helpline')) {
-      const contactsList = emergencyContacts.map(c => 
-        `• **${c.name}** (${c.relation}): 📞 **${c.phone}** — *${c.notes}*`
-      ).join('\n');
+    // 10. Local travel guidelines & transit tips
+    if (q.includes('tip') || q.includes('advice') || q.includes('guideline') || q.includes('rule') || q.includes('transport connection') || q.includes('commute')) {
+      return `🧭 **Travel Guidelines & Transit Tips for ${trip.destination}:**
 
-      return `🛡️ **Safety Center & 24/7 Helpline Directory:**
-
-${contactsList}
-
-🚨 **Quick Emergency Protocol:**
-1. National Emergency Police & Medical Services: Dial **112**
-2. Railway Protection Force (RPF) Helpline: Dial **139**
-3. Tap **Safety Center** in the sidebar to activate the red 1-click **Emergency SOS Broadcast**, which alerts all group members and logs GPS coordinates.`;
+• **Transit Timings:** Arrive at railway stations at least 30 minutes before scheduled departure (${transports[0]?.departureTime || '07:00 AM'}).
+• **Local Connections:** Auto-rickshaws and cabs are readily available at station exits. You can also view doorstep transfer options in the **Door-to-Door** tab.
+• **Digital Tickets:** Keep your IRCTC/airline boarding pass and photo identification readily accessible on your phone.
+• **Weather Readiness:** Current destination weather is **${weather[0]?.condition || 'Pleasant'}** (${weather[0]?.tempC || 20}°C).`;
     }
 
     // 11. Traveller count / Extra people / Group changes

@@ -2,6 +2,7 @@ import { db } from '../db';
 import {
   Trip,
   TripMetrics,
+  Settlement,
   ExpenseCategory,
   FullTripData,
   WeatherCondition,
@@ -139,25 +140,42 @@ export class DependencyEngine {
       spendingAlerts.push('Food spending has surpassed the initial allocation.');
     }
 
-    // Group Balances (Splitwise style)
+    // Group Balances & Debt Simplification Settlement Algorithm
     const memberCount = Math.max(1, members.length);
-    const equalSharePerMember = totalSpent / memberCount;
-
     const memberPaidMap: Record<string, number> = {};
+    const memberFairShareMap: Record<string, number> = {};
+
     members.forEach(m => {
       memberPaidMap[m.id] = 0;
+      memberFairShareMap[m.id] = 0;
     });
 
     expenses.forEach(exp => {
       const payerId = exp.paidByMemberId;
+      const amount = Number(exp.amount) || 0;
       if (payerId && memberPaidMap[payerId] !== undefined) {
-        memberPaidMap[payerId] += Number(exp.amount) || 0;
+        memberPaidMap[payerId] += amount;
+      }
+
+      // Calculate fair share per member based on splitType
+      if ((exp.splitType === 'Exact' || exp.splitType === 'Custom') && exp.splits && exp.splits.length > 0) {
+        exp.splits.forEach(s => {
+          if (memberFairShareMap[s.memberId] !== undefined) {
+            memberFairShareMap[s.memberId] += Number(s.shareAmount) || 0;
+          }
+        });
+      } else {
+        // Equal split across all members
+        const share = amount / memberCount;
+        members.forEach(m => {
+          memberFairShareMap[m.id] += share;
+        });
       }
     });
 
     const groupBalances = members.map(m => {
-      const paid = memberPaidMap[m.id] || 0;
-      const shouldPay = Math.round(equalSharePerMember);
+      const paid = Math.round(memberPaidMap[m.id] || 0);
+      const shouldPay = Math.round(memberFairShareMap[m.id] || 0);
       const netBalance = Math.round(paid - shouldPay);
       return {
         memberId: m.id,
@@ -167,6 +185,72 @@ export class DependencyEngine {
         netBalance
       };
     });
+
+    // Update members in DB with accurate paidAmount and balance
+    let membersUpdated = false;
+    members.forEach(m => {
+      const b = groupBalances.find(gb => gb.memberId === m.id);
+      if (b && (m.paidAmount !== b.paid || m.balance !== b.netBalance)) {
+        m.paidAmount = b.paid;
+        m.balance = b.netBalance;
+        membersUpdated = true;
+      }
+    });
+    if (membersUpdated) {
+      db.setMembers(tripId, members);
+    }
+
+    // Debt Simplification Algorithm
+    // Separate into debtors (netBalance < 0) and creditors (netBalance > 0)
+    interface BalanceEntry {
+      id: string;
+      name: string;
+      balance: number;
+    }
+
+    const debtors: BalanceEntry[] = groupBalances
+      .filter(b => b.netBalance < 0)
+      .map(b => ({ id: b.memberId, name: b.name, balance: b.netBalance }))
+      .sort((a, b) => a.balance - b.balance); // most negative first
+
+    const creditors: BalanceEntry[] = groupBalances
+      .filter(b => b.netBalance > 0)
+      .map(b => ({ id: b.memberId, name: b.name, balance: b.netBalance }))
+      .sort((a, b) => b.balance - a.balance); // most positive first
+
+    const settlements: Settlement[] = [];
+    let dIdx = 0;
+    let cIdx = 0;
+
+    while (dIdx < debtors.length && cIdx < creditors.length) {
+      const debtor = debtors[dIdx];
+      const creditor = creditors[cIdx];
+      const debitRem = Math.abs(debtor.balance);
+      const creditRem = creditor.balance;
+      const amount = Math.min(debitRem, creditRem);
+
+      if (amount > 0) {
+        settlements.push({
+          id: `stl_${tripId}_${debtor.id}_${creditor.id}_${settlements.length + 1}`,
+          tripId,
+          fromMemberId: debtor.id,
+          fromMemberName: debtor.name,
+          toMemberId: creditor.id,
+          toMemberName: creditor.name,
+          amount: Math.round(amount),
+          status: 'Pending'
+        });
+      }
+
+      debtor.balance += amount;
+      creditor.balance -= amount;
+
+      if (Math.abs(debtor.balance) < 0.5) dIdx++;
+      if (creditor.balance < 0.5) cIdx++;
+    }
+
+    const settledAmount = settlements.filter(s => s.status === 'Settled').reduce((sum, s) => sum + s.amount, 0);
+    const outstandingAmount = settlements.filter(s => s.status === 'Pending').reduce((sum, s) => sum + s.amount, 0);
 
     return {
       totalBudget,
@@ -180,7 +264,10 @@ export class DependencyEngine {
       categoryBreakdown,
       spendingAlerts,
       aiFinancialAdvice,
-      groupBalances
+      groupBalances,
+      settlements,
+      settledAmount,
+      outstandingAmount
     };
   }
 
@@ -471,7 +558,44 @@ export class DependencyEngine {
   }
 
   /**
+   * Helper to parse time strings like '04:30 PM' or '16:30' into minutes since midnight.
+   */
+  public static parseTimeToMinutes(timeStr: string): number | null {
+    if (!timeStr) return null;
+    const clean = timeStr.trim();
+    const ampmMatch = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (ampmMatch) {
+      let hours = parseInt(ampmMatch[1], 10);
+      const minutes = parseInt(ampmMatch[2], 10);
+      const period = ampmMatch[3].toUpperCase();
+      if (period === 'PM' && hours < 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    }
+    const milMatch = clean.match(/^(\d{1,2}):(\d{2})$/);
+    if (milMatch) {
+      return parseInt(milMatch[1], 10) * 60 + parseInt(milMatch[2], 10);
+    }
+    return null;
+  }
+
+  /**
+   * Helper to format minutes since midnight into 'hh:mm A' format.
+   */
+  public static formatMinutesToTime(minutes: number): string {
+    const wrapped = ((minutes % 1440) + 1440) % 1440;
+    const hours24 = Math.floor(wrapped / 60);
+    const mins = wrapped % 60;
+    const period = hours24 >= 12 ? 'PM' : 'AM';
+    const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(hours12)}:${pad(mins)} ${period}`;
+  }
+
+  /**
    * Adds or replaces an itinerary activity with a Hidden Gem.
+   * If replacing, updates the selected item.
+   * If appending, checks existing items for time conflicts and schedules in an available slot.
    */
   public static handleAddHiddenGem(
     tripId: string,
@@ -511,7 +635,58 @@ export class DependencyEngine {
         };
       }
     } else {
-      // Append into day
+      // Find a conflict-free time slot for a 2-hour visit (duration = 120 mins)
+      const durationMins = 120;
+      let chosenStart = 16 * 60 + 30; // Default candidate: 04:30 PM (990 mins)
+      let chosenEnd = chosenStart + durationMins; // 06:30 PM (1110 mins)
+
+      // Collect busy intervals from existing items
+      const busySlots: { start: number; end: number }[] = [];
+      day.items.forEach(item => {
+        const s = DependencyEngine.parseTimeToMinutes(item.startTime);
+        const e = DependencyEngine.parseTimeToMinutes(item.endTime);
+        if (s !== null && e !== null && e > s) {
+          busySlots.push({ start: s, end: e });
+        }
+      });
+
+      const hasConflict = (start: number, end: number) => {
+        return busySlots.some(slot => Math.max(start, slot.start) < Math.min(end, slot.end));
+      };
+
+      if (hasConflict(chosenStart, chosenEnd)) {
+        // Try candidate slots across the day from 09:00 AM to 08:00 PM
+        const candidateStarts = [
+          10 * 60,       // 10:00 AM
+          11 * 60 + 30,  // 11:30 AM
+          14 * 60,       // 02:00 PM
+          15 * 60 + 30,  // 03:30 PM
+          17 * 60,       // 05:00 PM
+          18 * 60,       // 06:00 PM
+          19 * 60        // 07:00 PM
+        ];
+
+        let foundSlot = false;
+        for (const candidate of candidateStarts) {
+          if (!hasConflict(candidate, candidate + durationMins)) {
+            chosenStart = candidate;
+            chosenEnd = candidate + durationMins;
+            foundSlot = true;
+            break;
+          }
+        }
+
+        // If all standard candidates conflict, find the maximum end time and append after with buffer
+        if (!foundSlot && busySlots.length > 0) {
+          const maxEnd = Math.max(...busySlots.map(b => b.end));
+          chosenStart = Math.min(maxEnd + 15, 22 * 60 - durationMins);
+          chosenEnd = chosenStart + durationMins;
+        }
+      }
+
+      const formattedStartTime = DependencyEngine.formatMinutesToTime(chosenStart);
+      const formattedEndTime = DependencyEngine.formatMinutesToTime(chosenEnd);
+
       const orderIdx = day.items.length + 1;
       day.items.push({
         id: `item_gem_${Date.now()}`,
@@ -520,8 +695,8 @@ export class DependencyEngine {
         title: `Hidden Gem: ${gem.name}`,
         description: `${gem.description} (Crowd Level: ${gem.crowdLevel}, Best Time: ${gem.bestTime})`,
         category: 'Hidden Gem',
-        startTime: '04:30 PM',
-        endTime: '06:30 PM',
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
         location: gem.location,
         cost: gem.cost,
         status: 'Planned',
@@ -531,6 +706,16 @@ export class DependencyEngine {
         lat: gem.lat,
         lng: gem.lng,
         orderIndex: orderIdx
+      });
+
+      // Sort items chronologically by start time while preserving order index
+      day.items.sort((a, b) => {
+        const timeA = DependencyEngine.parseTimeToMinutes(a.startTime) ?? 0;
+        const timeB = DependencyEngine.parseTimeToMinutes(b.startTime) ?? 0;
+        return timeA - timeB;
+      });
+      day.items.forEach((item, i) => {
+        item.orderIndex = i + 1;
       });
     }
 
@@ -658,7 +843,6 @@ export class DependencyEngine {
       budget: simBudget,
       bookings: currentData.bookings,
       weather: currentData.weather,
-      emergencyContacts: currentData.emergencyContacts,
       hiddenGems: currentData.hiddenGems,
       changeLogs: currentData.changeLogs,
       metrics: simulatedMetrics,
@@ -702,7 +886,6 @@ export class DependencyEngine {
     };
     const bookings = db.getBookings(tripId);
     const weather = db.getWeather(tripId);
-    const emergencyContacts = db.getEmergencyContacts(tripId);
     const hiddenGems = db.getHiddenGems(tripId);
     const changeLogs = db.getChangeLogs(tripId);
     const notifications = db.getNotifications(tripId);
@@ -718,7 +901,6 @@ export class DependencyEngine {
       budget,
       bookings,
       weather,
-      emergencyContacts,
       hiddenGems,
       changeLogs,
       metrics,

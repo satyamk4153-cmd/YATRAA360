@@ -7,8 +7,6 @@ import {
   Train,
   Plane,
   ArrowRight,
-  Clock,
-  Calendar,
   CheckCircle2,
   ExternalLink,
   Filter,
@@ -16,11 +14,19 @@ import {
   AlertCircle,
   RefreshCw,
   Edit2,
-  Building2,
   Sparkles,
   Info,
-  Scale
+  Scale,
+  Car,
+  Copy,
+  Check
 } from 'lucide-react';
+import { RideProviderCard } from './RideProviderCard';
+import {
+  openIRCTC,
+  openFlightBooking,
+  copyJourneyDetailsToClipboard
+} from '../services/bookingLinks';
 
 export const BookingsTransportView: React.FC = () => {
   const {
@@ -36,7 +42,8 @@ export const BookingsTransportView: React.FC = () => {
     addToast
   } = useTripStore();
 
-  const [activeTab, setActiveTab] = useState<'Trains' | 'Flights' | 'Compare' | 'Confirmed'>('Trains');
+  const [activeTab, setActiveTab] = useState<'Trains' | 'Flights' | 'Rides' | 'Compare' | 'Confirmed'>('Trains');
+  const [copiedDetails, setCopiedDetails] = useState(false);
   const [trains, setTrains] = useState<TrainResult[]>([]);
   const [flightData, setFlightData] = useState<FlightSearchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +67,7 @@ export const BookingsTransportView: React.FC = () => {
   const [arrTime, setArrTime] = useState('');
 
   // Fetch search data whenever searchOrigin or searchDestination changes
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     if (!searchOrigin || !searchDestination || searchOrigin.toLowerCase() === searchDestination.toLowerCase()) {
       return;
     }
@@ -86,18 +93,18 @@ export const BookingsTransportView: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchOrigin, searchDestination, searchDate]);
 
   useEffect(() => {
     fetchData();
-  }, [searchOrigin, searchDestination, searchDate]);
+  }, [fetchData]);
 
   // Sync travelMode from store into activeTab if user switched in DestinationSelector
   useEffect(() => {
-    if (travelMode === 'Flight' && activeTab === 'Trains') {
-      setActiveTab('Flights');
-    } else if (travelMode === 'Train' && activeTab === 'Flights') {
-      setActiveTab('Trains');
+    if (travelMode === 'Flight') {
+      setActiveTab((prev) => (prev === 'Trains' ? 'Flights' : prev));
+    } else if (travelMode === 'Train') {
+      setActiveTab((prev) => (prev === 'Flights' ? 'Trains' : prev));
     }
   }, [travelMode]);
 
@@ -127,21 +134,27 @@ export const BookingsTransportView: React.FC = () => {
     });
 
   const handleOfficialTrainRedirect = (train: TrainResult, selectedClass?: string) => {
-    // Direct link to IRCTC official train search
-    const irctcUrl = `https://www.irctc.co.in/nget/train-search`;
-    window.open(irctcUrl, '_blank', 'noopener,noreferrer');
+    openIRCTC({
+      source: train.fromStationName || searchOrigin,
+      destination: train.toStationName || searchDestination,
+      journeyDate: searchDate,
+      trainNumber: train.trainNumber,
+      trainName: train.trainName,
+      classCode: selectedClass
+    });
     addToast(
-      `Redirecting to official IRCTC portal for Train ${train.trainNumber} (${train.trainName}). Details copied.`,
+      `Redirecting to official IRCTC portal. Journey details copied to clipboard.`,
       'info'
     );
     setBookingModal(null);
   };
 
   const handleOfficialFlightRedirect = (flight: FlightResult) => {
-    // Legitimate Google Flights search deep link with route prefilled
-    const query = encodeURIComponent(`flights from ${flight.fromCity} to ${flight.toCity} on ${searchDate}`);
-    const flightsUrl = `https://www.google.com/travel/flights?q=${query}`;
-    window.open(flightsUrl, '_blank', 'noopener,noreferrer');
+    openFlightBooking({
+      origin: flight.fromCity || searchOrigin,
+      destination: flight.toCity || searchDestination,
+      departureDate: searchDate
+    });
     addToast(
       `Redirecting to official flight portal for ${flight.airline} ${flight.flightNumber}. Complete booking securely.`,
       'info'
@@ -215,7 +228,7 @@ export const BookingsTransportView: React.FC = () => {
             }`}
           >
             <Plane className="w-3.5 h-3.5" />
-            <span>Flights ({flightData?.flights.length || 0})</span>
+            <span>Flights ({flightData?.flights?.length || 0})</span>
           </button>
 
           <button
@@ -228,6 +241,18 @@ export const BookingsTransportView: React.FC = () => {
           >
             <Scale className="w-3.5 h-3.5" />
             <span>Compare Train vs Flight</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('Rides')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              activeTab === 'Rides'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Car className="w-3.5 h-3.5" />
+            <span>Cabs &amp; Auto (Uber / Ola / Rapido)</span>
           </button>
 
           <button
@@ -498,75 +523,86 @@ export const BookingsTransportView: React.FC = () => {
 
           {/* Flight Cards */}
           <div className="space-y-3">
-            {flightData?.flights.map((flight) => (
-              <div
-                key={flight.flightNumber}
-                className="bg-white rounded-xl p-5 border border-slate-200 hover:border-slate-300 transition-all space-y-4"
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  
-                  {/* Airline & Flight Number */}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Plane className="w-4 h-4 text-blue-600" />
-                      <h3 className="text-base font-bold text-slate-900">{flight.airline}</h3>
-                      <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                        {flight.flightNumber}
-                      </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {flight.stops}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {flight.cabinClass} • {flight.seatsAvailable} seats available
-                    </p>
-                  </div>
-
-                  {/* Flight Schedule Timing */}
-                  <div className="flex items-center gap-4 bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-200 text-xs">
+            {flightData?.flights && flightData.flights.length > 0 ? (
+              flightData.flights.map((flight) => (
+                <div
+                  key={flight.flightNumber}
+                  className="bg-white rounded-xl p-5 border border-slate-200 hover:border-slate-300 transition-all space-y-4"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    
+                    {/* Airline & Flight Number */}
                     <div>
-                      <span className="font-bold text-sm text-slate-900 block">{flight.departureTime}</span>
-                      <span className="text-[11px] text-slate-500">{flight.fromAirportCode} ({flight.fromCity})</span>
+                      <div className="flex items-center gap-2">
+                        <Plane className="w-4 h-4 text-blue-600" />
+                        <h3 className="text-base font-bold text-slate-900">{flight.airline}</h3>
+                        <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                          {flight.flightNumber}
+                        </span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          {flight.stops}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {flight.cabinClass} • {flight.seatsAvailable} seats available
+                      </p>
                     </div>
-                    <div className="text-center px-2">
-                      <span className="text-[10px] text-slate-400 block">{flight.duration}</span>
-                      <ArrowRight className="w-4 h-4 text-slate-400 mx-auto" />
+
+                    {/* Flight Schedule Timing */}
+                    <div className="flex items-center gap-4 bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-200 text-xs">
+                      <div>
+                        <span className="font-bold text-sm text-slate-900 block">{flight.departureTime}</span>
+                        <span className="text-[11px] text-slate-500">{flight.fromAirportCode} ({flight.fromCity})</span>
+                      </div>
+                      <div className="text-center px-2">
+                        <span className="text-[10px] text-slate-400 block">{flight.duration}</span>
+                        <ArrowRight className="w-4 h-4 text-slate-400 mx-auto" />
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-sm text-slate-900 block">{flight.arrivalTime}</span>
+                        <span className="text-[11px] text-slate-500">{flight.toAirportCode} ({flight.toCity})</span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="font-bold text-sm text-slate-900 block">{flight.arrivalTime}</span>
-                      <span className="text-[11px] text-slate-500">{flight.toAirportCode} ({flight.toCity})</span>
+
+                    {/* Pricing & Booking */}
+                    <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0">
+                      <div className="text-right">
+                        <span className="text-xs text-slate-400 block">Starting from</span>
+                        <span className="text-base font-bold text-slate-900">₹{flight.fare.toLocaleString('en-IN')}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => selectFlightAndApply(flight)}
+                          className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                          title="Set this flight as primary transport for active trip"
+                        >
+                          Select
+                        </button>
+
+                        <button
+                          onClick={() => setBookingModal({ type: 'Flight', item: flight })}
+                          className="px-3.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                        >
+                          <span>Book Flight</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
+
                   </div>
-
-                  {/* Pricing & Booking */}
-                  <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0">
-                    <div className="text-right">
-                      <span className="text-xs text-slate-400 block">Starting from</span>
-                      <span className="text-base font-bold text-slate-900">₹{flight.fare.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => selectFlightAndApply(flight)}
-                        className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                        title="Set this flight as primary transport for active trip"
-                      >
-                        Select
-                      </button>
-
-                      <button
-                        onClick={() => setBookingModal({ type: 'Flight', item: flight })}
-                        className="px-3.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                      >
-                        <span>Book Flight</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
                 </div>
+              ))
+            ) : (
+              <div className="p-8 text-center bg-white rounded-xl border border-slate-200 space-y-2">
+                <Plane className="w-8 h-8 text-slate-300 mx-auto" />
+                <h4 className="text-sm font-bold text-slate-800">No Direct Commercial Flights Found</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Direct commercial air service between {searchOrigin} and {searchDestination} is unavailable.
+                  Consider railway transit options or regional connecting flights via Delhi (DEL).
+                </p>
               </div>
-            ))}
+            )}
           </div>
 
         </div>
@@ -692,6 +728,72 @@ export const BookingsTransportView: React.FC = () => {
       )}
 
       {/* ============================================================== */}
+      {/* TAB: LOCAL RIDES (UBER / OLA / RAPIDO)                          */}
+      {/* ============================================================== */}
+      {activeTab === 'Rides' && (
+        <div className="space-y-5">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    On-Demand Rides
+                  </span>
+                  <span className="text-2xs text-slate-500">Official Provider Deep Links</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Local &amp; Intercity Ride Booking
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Direct deep links for Uber, Ola, and Rapido with pickup ({searchOrigin}) and destination ({searchDestination}) coordinates.
+                </p>
+              </div>
+
+              <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                Route: {searchOrigin} ➔ {searchDestination}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <RideProviderCard
+                provider="uber"
+                pickup={{ address: searchOrigin }}
+                destination={{ address: searchDestination }}
+                rideType="UberGo / Premier / Auto / Intercity"
+                estimatedFare="₹1,200 – ₹1,800"
+                eta="3-5 mins"
+              />
+
+              <RideProviderCard
+                provider="ola"
+                pickup={{ address: searchOrigin }}
+                destination={{ address: searchDestination }}
+                rideType="Mini / Prime Sedan / Outstation"
+                estimatedFare="₹1,150 – ₹1,750"
+                eta="4-6 mins"
+              />
+
+              <RideProviderCard
+                provider="rapido"
+                pickup={{ address: searchOrigin }}
+                destination={{ address: searchDestination }}
+                rideType="Auto / Bike / Cab"
+                estimatedFare="₹250 – ₹1,100"
+                eta="2-4 mins"
+              />
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-2xs text-slate-600 flex items-center justify-between">
+              <span>
+                Note: All rides redirect to official apps/portals with SSL verification. Yatraa360 does not intermediate payment credentials.
+              </span>
+              <span className="font-semibold text-slate-700">Official Portals</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
       {/* TAB 4: CONFIRMED TRANSITS IN ACTIVE TRIP                        */}
       {/* ============================================================== */}
       {activeTab === 'Confirmed' && (
@@ -764,22 +866,23 @@ export const BookingsTransportView: React.FC = () => {
       {/* ============================================================== */}
       {bookingModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 border border-slate-200 shadow-xl space-y-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 border border-slate-200 shadow-xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 {bookingModal.type === 'Train' ? (
                   <>
-                    <Train className="w-5 h-5 text-blue-700" />
+                    <Train className="w-5 h-5 text-indigo-600" />
                     <span>Official Railway Booking (IRCTC)</span>
                   </>
                 ) : (
                   <>
-                    <Plane className="w-5 h-5 text-blue-700" />
+                    <Plane className="w-5 h-5 text-indigo-600" />
                     <span>Official Airline Booking Portal</span>
                   </>
                 )}
               </h3>
               <button
+                type="button"
                 onClick={() => setBookingModal(null)}
                 className="text-slate-400 hover:text-slate-600 text-sm font-bold cursor-pointer"
               >
@@ -787,14 +890,16 @@ export const BookingsTransportView: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-3.5 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-900 space-y-1">
-              <p className="font-semibold">Notice regarding official ticket booking:</p>
+            <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-900 space-y-1">
+              <p className="font-semibold">Official Ticketing Notice:</p>
               <p>
-                In compliance with official railway and aviation guidelines, ticket booking transactions must be securely completed directly on the official service.
+                {bookingModal.type === 'Train'
+                  ? 'IRCTC requires individual Indian Railways authentication & CAPTCHA on irctc.co.in. Your journey details can be copied below for seamless entry.'
+                  : 'Official airline booking opens securely with route parameters prefilled on Google Flights.'}
               </p>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-2">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
               <div className="flex justify-between">
                 <span className="text-slate-500">Service:</span>
                 <strong className="text-slate-800">
@@ -821,11 +926,46 @@ export const BookingsTransportView: React.FC = () => {
               </div>
             </div>
 
+            {bookingModal.type === 'Train' && (
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <span className="text-slate-600 text-2xs">Copy details to paste into IRCTC search:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const t = bookingModal.item as TrainResult;
+                    copyJourneyDetailsToClipboard({
+                      source: searchOrigin,
+                      destination: searchDestination,
+                      journeyDate: searchDate,
+                      trainNumber: t.trainNumber,
+                      trainName: t.trainName,
+                      classCode: bookingModal.selectedClass
+                    });
+                    setCopiedDetails(true);
+                    setTimeout(() => setCopiedDetails(false), 2000);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  {copiedDetails ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Journey Details</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setBookingModal(null)}
-                className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
@@ -839,7 +979,7 @@ export const BookingsTransportView: React.FC = () => {
                     handleOfficialFlightRedirect(bookingModal.item as FlightResult);
                   }
                 }}
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               >
                 <span>Continue to Official Website</span>
                 <ExternalLink className="w-3.5 h-3.5" />

@@ -53,11 +53,11 @@ export const LandingView: React.FC = () => {
       bg: 'bg-amber-50'
     },
     {
-      icon: ShieldCheck,
-      title: 'Safety Center & SOS',
-      desc: 'Emergency SOS with GPS coordinates, local hospital and police contacts, and a shared group emergency checklist for every journey.',
-      color: 'text-red-700',
-      bg: 'bg-red-50'
+      icon: MapPin,
+      title: 'OSRM Road & Route Geometry',
+      desc: 'Real road routing with accurate highway geometries and Leaflet bounds. Integrates doorstep cabs with intercity train corridors.',
+      color: 'text-rose-700',
+      bg: 'bg-rose-50'
     }
   ];
 

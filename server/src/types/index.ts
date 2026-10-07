@@ -3,7 +3,7 @@ export type TransportPreference = 'Train' | 'Flight' | 'Bus' | 'Self-Drive' | 'C
 export type AccommodationPreference = 'Hostel' | 'Boutique Hotel' | 'Resort' | 'Homestay' | 'Luxury Hotel' | 'Budget Hotel';
 export type MemberRole = 'Organizer' | 'Co-Leader' | 'Member';
 export type ExpenseCategory = 'Transport' | 'Accommodation' | 'Food' | 'Activities' | 'Shopping' | 'Emergency' | 'Miscellaneous';
-export type ItineraryCategory = 'Transit' | 'Activity' | 'Food' | 'Sightseeing' | 'Shopping' | 'Rest' | 'Check-in' | 'Check-out' | 'Hidden Gem' | 'Return Transit';
+export type ItineraryCategory = 'Transit' | 'Activity' | 'Food' | 'Sightseeing' | 'Shopping' | 'Rest' | 'Check-in' | 'Check-out' | 'Hidden Gem' | 'Return Transit' | 'Culture';
 export type WeatherCondition = 'Sunny' | 'Partly Cloudy' | 'Cloudy' | 'Light Rain' | 'Heavy Rain' | 'Thunderstorm' | 'Snow' | 'Foggy';
 export type WeatherAlertLevel = 'None' | 'Advisory' | 'Warning' | 'Severe';
 
@@ -11,12 +11,27 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  passwordHash: string;
   avatar?: string;
   createdAt: string;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  user: AuthUser;
+  token: string;
+}
+
 export interface Trip {
   id: string;
+  userId?: string;
   title: string;
   origin: string;
   destination: string;
@@ -53,7 +68,6 @@ export interface TravellerProfile {
   age?: number;
   dietary?: string;
   physicalAbility?: string;
-  emergencyContact?: string;
 }
 
 export interface Transport {
@@ -178,6 +192,7 @@ export interface Expense {
   paidByMemberId: string;
   paidByName?: string;
   splitType: 'Equal' | 'Exact' | 'Custom';
+  splits?: ExpenseSplit[];
   date: string;
   receiptUrl?: string;
   notes?: string;
@@ -188,7 +203,18 @@ export interface ExpenseSplit {
   expenseId: string;
   memberId: string;
   shareAmount: number;
-  isSettled: boolean;
+  isSettled?: boolean;
+}
+
+export interface Settlement {
+  id: string;
+  tripId: string;
+  fromMemberId: string;
+  fromMemberName: string;
+  toMemberId: string;
+  toMemberName: string;
+  amount: number;
+  status: 'Pending' | 'Settled';
 }
 
 export interface Budget {
@@ -228,34 +254,58 @@ export interface WeatherSnapshot {
   summary: string;
 }
 
-export interface EmergencyContact {
-  id: string;
-  tripId: string;
-  name: string;
-  relation: string;
-  phone: string;
-  priority: number;
-  notes?: string;
+export interface CurrentWeather {
+  temperature: number;
+  windSpeed: number;
+  weatherCode: number;
+  condition: WeatherCondition;
+  weatherDescription: string;
+  description?: string;
+  updatedAt: string;
 }
 
-export interface ChatMessage {
-  id: string;
-  tripId: string;
-  senderId: string;
-  senderName: string;
-  senderAvatar?: string;
-  message: string;
-  timestamp: string;
-  attachmentUrl?: string;
-  isAi?: boolean;
+export interface DailyForecastDay {
+  date: string;
+  tempMax: number;
+  temperatureMax?: number;
+  tempMin: number;
+  temperatureMin?: number;
+  precipitationProbability: number;
+  weatherCode: number;
+  condition: WeatherCondition;
+  weatherDescription: string;
+  description?: string;
 }
 
-export interface ActivityVote {
-  id: string;
-  tripId: string;
-  itemId: string;
-  memberId: string;
-  voteType: 'UP' | 'DOWN';
+export interface WeatherForecastResponse {
+  destination: string;
+  latitude: number;
+  longitude: number;
+  current: CurrentWeather;
+  daily: DailyForecastDay[];
+  isLive: boolean;
+  provider: string;
+  updatedAt?: string;
+  error?: string;
+}
+
+export interface GeocodedLocation {
+  latitude: number;
+  longitude: number;
+  displayName: string;
+  city: string;
+  state: string;
+  country: string;
+}
+
+export interface RouteResponse {
+  success: boolean;
+  distanceKm: number;
+  durationMinutes: number;
+  geometry: [number, number][]; // [lat, lng] array formatted for Leaflet
+  provider: string;
+  mode: string;
+  error?: string;
 }
 
 export interface TripChangeLog {
@@ -305,6 +355,9 @@ export interface TripMetrics {
     shouldPay: number;
     netBalance: number; // positive = receives, negative = owes
   }[];
+  settlements: Settlement[];
+  settledAmount: number;
+  outstandingAmount: number;
 }
 
 export interface FullTripData {
@@ -317,7 +370,6 @@ export interface FullTripData {
   budget: Budget;
   bookings: Booking[];
   weather: WeatherSnapshot[];
-  emergencyContacts: EmergencyContact[];
   hiddenGems: HiddenGem[];
   changeLogs: TripChangeLog[];
   metrics: TripMetrics;
@@ -346,4 +398,48 @@ export interface WhatIfSimulationResult {
   itineraryAdjustments: string[];
   aiRecommendations: string[];
   simulatedTripData: FullTripData;
+}
+
+export interface CreateTripInput {
+  origin: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  travellersCount: number;
+  budget: number;
+  transportPreference?: TransportPreference;
+  accommodationPreference?: AccommodationPreference;
+  travelStyle?: TravelStyle;
+  interests?: string[];
+}
+
+export interface UpdateTripInput {
+  travellersCount?: number;
+  budget?: number;
+  travelStyle?: TravelStyle;
+  transportPreference?: TransportPreference;
+  accommodationPreference?: AccommodationPreference;
+  status?: 'Planning' | 'Active' | 'Completed' | 'Archived';
+}
+
+export interface CreateExpenseInput {
+  title: string;
+  amount: number;
+  category: ExpenseCategory;
+  paidByMemberId?: string;
+  splitType?: 'Equal' | 'Exact' | 'Custom';
+  splits?: { memberId: string; shareAmount: number }[];
+  notes?: string;
+}
+
+export interface AddItineraryItemInput {
+  dayNumber: number;
+  title: string;
+  description?: string;
+  category?: ItineraryCategory;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  cost?: number;
+  isWeatherSensitive?: boolean;
 }

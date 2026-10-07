@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTripStore } from '../store/tripStore';
+import { api } from '../services/api';
 import {
   Wallet,
   Users,
@@ -8,17 +9,11 @@ import {
   Compass,
   ArrowRight,
   AlertTriangle,
-  MapPin,
   Train,
-  Building2,
   Bot,
   Plus,
-  ShieldCheck,
-  CheckCircle2,
   Gem,
-  Sparkles,
-  Clock,
-  Edit2
+  Sparkles
 } from 'lucide-react';
 
 export const DashboardView: React.FC = () => {
@@ -39,6 +34,50 @@ export const DashboardView: React.FC = () => {
 
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
   const [newBudgetVal, setNewBudgetVal] = useState(currentTrip?.trip.budget || 40000);
+
+  // Live Open-Meteo Telemetry State
+  const [liveWeather, setLiveWeather] = useState<{
+    temperature: number;
+    condition: string;
+    precipitationProbability: number;
+    windSpeed: number;
+    description: string;
+    isLive: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+    const dest = currentTrip?.trip.destination;
+    if (!dest) return;
+
+    const fetchLive = async () => {
+      try {
+        const geo = await api.geocodeLocation(dest);
+        if (isCancelled) return;
+        const lat = geo?.latitude ?? 28.6139;
+        const lng = geo?.longitude ?? 77.2090;
+        const forecast = await api.getWeatherForecast({ lat, lng, destination: dest });
+        if (isCancelled) return;
+        if (forecast?.current) {
+          setLiveWeather({
+            temperature: forecast.current.temperature,
+            condition: forecast.current.condition || 'Sunny',
+            precipitationProbability: forecast.daily?.[0]?.precipitationProbability ?? 5,
+            windSpeed: forecast.current.windSpeed ?? 10,
+            description: forecast.current.description || 'Pleasant weather',
+            isLive: forecast.isLive ?? true
+          });
+        }
+      } catch {
+        // Fallback to simulated/store snapshot
+      }
+    };
+
+    fetchLive();
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentTrip?.trip.destination]);
 
   if (!currentTrip) return null;
 
@@ -122,7 +161,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Spending Alerts */}
-      {metrics.spendingAlerts.length > 0 && (
+      {metrics.spendingAlerts && metrics.spendingAlerts.length > 0 && (
         <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-xs">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1">
@@ -259,49 +298,76 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Weather Card */}
-        <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-            <span className="font-medium flex items-center gap-1.5"><CloudSun className="w-3.5 h-3.5 text-sky-600" /> Day 2 Weather</span>
-            <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${
-              weather[1]?.alertLevel === 'Severe' || weather[1]?.alertLevel === 'Warning'
-                ? 'bg-red-50 text-red-700 border-red-200'
-                : weather[1]?.alertLevel === 'Advisory'
-                ? 'bg-amber-50 text-amber-700 border-amber-200'
-                : 'bg-green-50 text-green-700 border-green-200'
-            }`}>
-              {weather[1]?.alertLevel || 'None'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div>
-              <span className="text-lg font-bold text-slate-900">{weather[1]?.condition || 'Sunny'}</span>
-              <span className="text-xs text-slate-500 block">{weather[1]?.tempC || 17}°C • {weather[1]?.precipitationChance}% rain</span>
-            </div>
-          </div>
+        {(() => {
+          const fallbackWeather = weather?.[0] || weather?.[1] || {
+            condition: 'Sunny',
+            tempC: 22,
+            precipitationChance: 5,
+            alertLevel: 'None'
+          };
+          const displayTemp = liveWeather ? liveWeather.temperature : (fallbackWeather.tempC ?? 22);
+          const displayCond = liveWeather ? liveWeather.condition : (fallbackWeather.condition || 'Sunny');
+          const displayRain = liveWeather ? liveWeather.precipitationProbability : (fallbackWeather.precipitationChance ?? 5);
+          const displayDesc = liveWeather ? liveWeather.description : 'Pleasant travel weather';
 
-          <div className="mt-3 flex items-center gap-1.5">
-            <button
-              onClick={() => simulateWeather(2, 'Sunny', false)}
-              className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                weather[1]?.condition === 'Sunny'
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              ☀️ Sunny
-            </button>
-            <button
-              onClick={() => simulateWeather(2, 'Heavy Rain', true)}
-              className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                weather[1]?.condition === 'Heavy Rain'
-                  ? 'bg-sky-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              🌧️ Rain
-            </button>
-          </div>
-        </div>
+          return (
+            <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+                <span className="font-medium flex items-center gap-1.5">
+                  <CloudSun className="w-3.5 h-3.5 text-sky-600" />
+                  {trip.destination} Weather
+                </span>
+                {liveWeather?.isLive ? (
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Live Open-Meteo
+                  </span>
+                ) : (
+                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${
+                    fallbackWeather.alertLevel === 'Severe' || fallbackWeather.alertLevel === 'Warning'
+                      ? 'bg-red-50 text-red-700 border-red-200'
+                      : fallbackWeather.alertLevel === 'Advisory'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-green-50 text-green-700 border-green-200'
+                  }`}>
+                    {fallbackWeather.alertLevel || 'None'}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <div>
+                  <span className="text-lg font-bold text-slate-900">{displayCond}</span>
+                  <span className="text-xs text-slate-500 block">
+                    {displayTemp}°C • {displayRain}% rain • {displayDesc}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center gap-1.5">
+                <button
+                  onClick={() => simulateWeather(1, 'Sunny', false)}
+                  className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                    displayCond === 'Sunny'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  ☀️ Sunny
+                </button>
+                <button
+                  onClick={() => simulateWeather(1, 'Heavy Rain', true)}
+                  className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                    displayCond === 'Heavy Rain'
+                      ? 'bg-sky-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  🌧️ Rain
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
 
@@ -378,6 +444,21 @@ export const DashboardView: React.FC = () => {
                 </span>
               </div>
             )}
+
+            {returnTransport && (
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🔄</span>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800">Return: {returnTransport.provider}</h4>
+                    <p className="text-[11px] text-slate-500">{returnTransport.departureStation} ({returnTransport.departureTime}) → {returnTransport.arrivalStation} ({returnTransport.arrivalTime})</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold border border-slate-300">
+                  {returnTransport.seats || 'Reserved'}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -422,11 +503,11 @@ export const DashboardView: React.FC = () => {
               <span>Explore Hidden Gems</span>
             </button>
             <button
-              onClick={() => setView('safety')}
-              className="w-full py-2.5 rounded-lg text-xs font-bold bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              onClick={() => setView('group')}
+              className="w-full py-2.5 rounded-lg text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Safety Center & SOS</span>
+              <Users className="w-3.5 h-3.5" />
+              <span>Group &amp; Expense Splits</span>
             </button>
           </div>
         </div>

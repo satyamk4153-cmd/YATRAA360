@@ -12,7 +12,7 @@ export const TripHistoryView: React.FC = () => {
 
   if (!currentTrip) return null;
 
-  const { changeLogs, trip, metrics, transports, accommodations, itinerary, emergencyContacts } = currentTrip;
+  const { changeLogs, trip, metrics, transports, accommodations, itinerary } = currentTrip;
 
   const handleExportPDF = () => {
     try {
@@ -95,15 +95,20 @@ export const TripHistoryView: React.FC = () => {
 
       doc.setFontSize(12);
       doc.setTextColor(29, 78, 216);
-      doc.text('3. Emergency Contacts', 14, y);
+      doc.text('3. Group Expense Settlements', 14, y);
       y += 6;
 
       doc.setFontSize(9);
       doc.setTextColor(30, 41, 59);
-      emergencyContacts.forEach(ec => {
-        doc.text(`• ${ec.name} (${ec.relation}): ${ec.phone}`, 16, y);
+      if (metrics.settlements && metrics.settlements.length > 0) {
+        metrics.settlements.forEach((s) => {
+          doc.text(`• ${s.fromMemberName} pays ${s.toMemberName}: INR ${s.amount.toLocaleString('en-IN')}`, 16, y);
+          y += 5;
+        });
+      } else {
+        doc.text('• All group balances are fully settled.', 16, y);
         y += 5;
-      });
+      }
 
       doc.save(`YATRAA_Trip_${trip.destination}_${trip.startDate}.pdf`);
       addToast('PDF downloaded successfully!', 'success');
