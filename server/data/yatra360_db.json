@@ -7,7 +7,7 @@
       "destination": "Manali",
       "startDate": "2026-10-15",
       "endDate": "2026-10-18",
-      "travellersCount": 5,
+      "travellersCount": 1,
       "budget": 40000,
       "transportPreference": "Train",
       "accommodationPreference": "Boutique Hotel",
@@ -19,8 +19,8 @@
         "Nature Trails"
       ],
       "status": "Active",
-      "createdAt": "2026-10-06T18:07:27.423Z",
-      "updatedAt": "2026-10-06T18:13:24.781Z"
+      "createdAt": "2026-10-07T04:49:34.675Z",
+      "updatedAt": "2026-10-07T04:54:33.538Z"
     },
     "trip_1789586523319": {
       "id": "trip_1789586523319",
@@ -123,50 +123,6 @@
         "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80",
         "paidAmount": 9500,
         "balance": 4875
-      },
-      {
-        "id": "mem_rahul",
-        "tripId": "demo-manali-trip-2026",
-        "name": "Rahul Verma",
-        "email": "rahul@yatra360.app",
-        "phone": "+91 98765 11002",
-        "role": "Co-Leader",
-        "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80",
-        "paidAmount": 7200,
-        "balance": 2575
-      },
-      {
-        "id": "mem_aman",
-        "tripId": "demo-manali-trip-2026",
-        "name": "Aman Gupta",
-        "email": "aman@yatra360.app",
-        "phone": "+91 98765 11003",
-        "role": "Member",
-        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80",
-        "paidAmount": 1800,
-        "balance": -2825
-      },
-      {
-        "id": "mem_neha",
-        "tripId": "demo-manali-trip-2026",
-        "name": "Neha Singh",
-        "email": "neha@yatra360.app",
-        "phone": "+91 98765 11004",
-        "role": "Member",
-        "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80",
-        "paidAmount": 0,
-        "balance": -4625
-      },
-      {
-        "id": "mem_1791310404771",
-        "tripId": "demo-manali-trip-2026",
-        "name": "Satyam Kumar",
-        "email": "satyamk4153@gmail.com",
-        "phone": "+919105960442",
-        "role": "Member",
-        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80",
-        "paidAmount": 0,
-        "balance": 0
       }
     ],
     "trip_1789586523319": [
@@ -261,16 +217,16 @@
         "id": "t_outbound",
         "tripId": "demo-manali-trip-2026",
         "type": "Train",
-        "provider": "Moradabad - Manali / Kalka Vande Bharat Express (22415)",
-        "identifier": "22415",
+        "provider": "Vande Bharat Express (22435)",
+        "identifier": "22435",
         "departureStation": "Moradabad Junction (MB)",
-        "arrivalStation": "Kalka / Manali Gateway (KLK)",
-        "departureTime": "06:00 AM",
-        "arrivalTime": "11:30 AM",
-        "price": 4480,
-        "status": "Selected",
+        "arrivalStation": "Chandigarh / Anandpur Sahib (CDG)",
+        "departureTime": "07:00 AM",
+        "arrivalTime": "01:30 PM",
+        "price": 7200,
+        "status": "Confirmed",
         "isReturn": false,
-        "seats": "5 Seats (AC Chair / 3A)",
+        "seats": "1 Seats (AC Chair / 3A)",
         "pnr": "2456-789123",
         "notes": "Doorstep pickup cab scheduled from Moradabad at 05:45 AM."
       },
@@ -287,7 +243,7 @@
         "price": 7200,
         "status": "Confirmed",
         "isReturn": true,
-        "seats": "5 Seats (AC Chair / 3A)",
+        "seats": "1 Seats (AC Chair / 3A)",
         "pnr": "2456-789124",
         "notes": "Drop-off cab from Moradabad Station to Home Doorstep ~10:15 PM."
       }
@@ -448,8 +404,8 @@
         "checkIn": "2026-10-15 02:30 PM",
         "checkOut": "2026-10-18 11:00 AM",
         "pricePerNight": 3200,
-        "totalPrice": 28800,
-        "roomCount": 3,
+        "totalPrice": 9600,
+        "roomCount": 1,
         "bookingRef": "HTL-MNL-88219",
         "amenities": [
           "Mountain View Balcony",
@@ -598,13 +554,13 @@
             "id": "item_d1_2",
             "dayId": "day_1",
             "tripId": "demo-manali-trip-2026",
-            "title": "Board Moradabad - Manali / Kalka Vande Bharat Express (22415)",
+            "title": "Board Vande Bharat Express (Train 22435)",
             "description": "Comfortable air-conditioned express train journey with onboard breakfast and scenic foothills views.",
             "category": "Transit",
-            "startTime": "06:00 AM",
-            "endTime": "11:30 AM",
+            "startTime": "07:00 AM",
+            "endTime": "01:30 PM",
             "location": "Moradabad Junction Platform 1",
-            "cost": 4480,
+            "cost": 0,
             "status": "Planned",
             "isLocked": true,
             "isUserModified": false,
@@ -668,10 +624,10 @@
         "date": "2026-10-16",
         "theme": "Solang Valley Nature Hike, Authentic Dham & Cultural Heritage",
         "weatherForecast": {
-          "condition": "Sunny",
+          "condition": "Heavy Rain",
           "tempC": 17,
           "precipitationChance": 10,
-          "alertLevel": "None",
+          "alertLevel": "Warning",
           "summary": "Clear skies and gentle valley breeze."
         },
         "items": [
@@ -679,16 +635,16 @@
             "id": "item_d2_1",
             "dayId": "day_2",
             "tripId": "demo-manali-trip-2026",
-            "title": "Solang Valley Panoramic Trek & Pine Forest Walk",
-            "description": "Guided morning nature trek along crystal clear streams and mountain vantage points with views of snow-capped peaks. [AI Re-optimized for Balanced travel style & current pace]",
-            "category": "Activity",
+            "title": "Himalayan Art, Culture & Heritage Museum",
+            "description": "State-of-the-art interactive cultural gallery displaying folk wooden architecture, traditional textiles, and virtual valley tour. [Indoor Alternative applied for Heavy Rain]",
+            "category": "Sightseeing",
             "startTime": "09:00 AM",
             "endTime": "01:00 PM",
-            "location": "Solang Valley Nature Trail",
-            "cost": 1000,
+            "location": "Himalayan Heritage Complex, Manali",
+            "cost": 500,
             "status": "Planned",
             "isLocked": false,
-            "isUserModified": false,
+            "isUserModified": true,
             "isWeatherSensitive": true,
             "weatherAlternative": {
               "title": "Himalayan Art, Culture & Heritage Museum",
@@ -726,7 +682,7 @@
             "dayId": "day_2",
             "tripId": "demo-manali-trip-2026",
             "title": "Naggar Castle & Himalayan Woodcraft Artisans",
-            "description": "Tour 15th-century wood-and-stone castle architecture overlooking the Beas valley, meeting local artisans. [AI Re-optimized for Balanced travel style & current pace]",
+            "description": "Tour 15th-century wood-and-stone castle architecture overlooking the Beas valley, meeting local artisans.",
             "category": "Sightseeing",
             "startTime": "03:30 PM",
             "endTime": "06:00 PM",
@@ -744,16 +700,16 @@
             "id": "item_d2_4",
             "dayId": "day_2",
             "tripId": "demo-manali-trip-2026",
-            "title": "Courtyard Campfire & Stargazing Session",
-            "description": "Evening open fire with roasted chestnuts, local warm apple cider, and acoustic guitar under clear mountain skies. [AI Re-optimized for Balanced travel style & current pace]",
-            "category": "Activity",
+            "title": "Indoor Fireside Board Game & Acoustic Music Night",
+            "description": "Warm indoor fireside lounge with hot spiced cocoa, board games, and travel trivia in the hotel library. [Indoor Alternative applied for Heavy Rain]",
+            "category": "Rest",
             "startTime": "07:30 PM",
             "endTime": "09:30 PM",
-            "location": "Pineview Retreat Open Lawn",
-            "cost": 400,
+            "location": "Pineview Fireside Library Lounge",
+            "cost": 200,
             "status": "Planned",
             "isLocked": false,
-            "isUserModified": false,
+            "isUserModified": true,
             "isWeatherSensitive": true,
             "weatherAlternative": {
               "title": "Indoor Fireside Board Game & Acoustic Music Night",
@@ -788,7 +744,7 @@
             "dayId": "day_3",
             "tripId": "demo-manali-trip-2026",
             "title": "Rohtang Pass / Atal Tunnel High Altitude Tour",
-            "description": "Scenic high-altitude drive through the engineering marvel of Atal Tunnel into the rugged Lahaul valley. [AI Re-optimized for Balanced travel style & current pace]",
+            "description": "Scenic high-altitude drive through the engineering marvel of Atal Tunnel into the rugged Lahaul valley.",
             "category": "Activity",
             "startTime": "08:30 AM",
             "endTime": "01:00 PM",
@@ -857,10 +813,10 @@
         "date": "2026-10-18",
         "theme": "Farewell Himalayas, Return Express & Doorstep Arrival",
         "weatherForecast": {
-          "condition": "Heavy Rain",
+          "condition": "Sunny",
           "tempC": 19,
           "precipitationChance": 5,
-          "alertLevel": "Warning",
+          "alertLevel": "None",
           "summary": "Clear skies for a smooth return journey."
         },
         "items": [
@@ -2785,12 +2741,12 @@
         "id": "w_d2",
         "tripId": "demo-manali-trip-2026",
         "date": "Day 2 (16 Oct)",
-        "condition": "Sunny",
-        "tempC": 17,
-        "precipitationChance": 10,
+        "condition": "Heavy Rain",
+        "tempC": 14,
+        "precipitationChance": 95,
         "windSpeed": "12 km/h W",
-        "alertLevel": "None",
-        "summary": "Clear blue skies over Solang Valley and Naggar."
+        "alertLevel": "Warning",
+        "summary": "Heavy rainfall warning. Mountain trails, outdoor treks, and open view-points face slippery terrain and low visibility."
       },
       {
         "id": "w_d3",
@@ -2807,12 +2763,12 @@
         "id": "w_d4",
         "tripId": "demo-manali-trip-2026",
         "date": "Day 4 (18 Oct)",
-        "condition": "Heavy Rain",
-        "tempC": 14,
-        "precipitationChance": 95,
+        "condition": "Sunny",
+        "tempC": 19,
+        "precipitationChance": 5,
         "windSpeed": "8 km/h NW",
-        "alertLevel": "Warning",
-        "summary": "Heavy rainfall warning. Mountain trails, outdoor treks, and open view-points face slippery terrain and low visibility."
+        "alertLevel": "None",
+        "summary": "Clear skies for pleasant transit."
       }
     ],
     "trip_1789586523319": [
@@ -5193,6 +5149,54 @@
         "senderName": "Neha Singh",
         "message": "Looks great! Can we check out Jogini Falls secret trail on Day 2 if weather stays clear?",
         "timestamp": "10:12 AM"
+      },
+      {
+        "id": "msg_1",
+        "tripId": "demo-manali-trip-2026",
+        "senderId": "mem_satyam",
+        "senderName": "Satyam Sharma",
+        "message": "Hey everyone! Moradabad to Manali trip is generated door-to-door. Vande Bharat tickets & hotel advance are booked! 🎉",
+        "timestamp": "10:00 AM"
+      },
+      {
+        "id": "msg_2",
+        "tripId": "demo-manali-trip-2026",
+        "senderId": "mem_rahul",
+        "senderName": "Rahul Verma",
+        "message": "Awesome Satyam! I covered the ₹7,200 train expense. You can check the split in the Group Manager.",
+        "timestamp": "10:05 AM"
+      },
+      {
+        "id": "msg_3",
+        "tripId": "demo-manali-trip-2026",
+        "senderId": "mem_neha",
+        "senderName": "Neha Singh",
+        "message": "Looks great! Can we check out Jogini Falls secret trail on Day 2 if weather stays clear?",
+        "timestamp": "10:12 AM"
+      },
+      {
+        "id": "msg_1",
+        "tripId": "demo-manali-trip-2026",
+        "senderId": "mem_satyam",
+        "senderName": "Satyam Sharma",
+        "message": "Hey everyone! Moradabad to Manali trip is generated door-to-door. Vande Bharat tickets & hotel advance are booked! 🎉",
+        "timestamp": "10:00 AM"
+      },
+      {
+        "id": "msg_2",
+        "tripId": "demo-manali-trip-2026",
+        "senderId": "mem_rahul",
+        "senderName": "Rahul Verma",
+        "message": "Awesome Satyam! I covered the ₹7,200 train expense. You can check the split in the Group Manager.",
+        "timestamp": "10:05 AM"
+      },
+      {
+        "id": "msg_3",
+        "tripId": "demo-manali-trip-2026",
+        "senderId": "mem_neha",
+        "senderName": "Neha Singh",
+        "message": "Looks great! Can we check out Jogini Falls secret trail on Day 2 if weather stays clear?",
+        "timestamp": "10:12 AM"
       }
     ],
     "trip_1789586523319": [
@@ -5288,6 +5292,136 @@
   "activityVotes": {},
   "changeLogs": {
     "demo-manali-trip-2026": [
+      {
+        "id": "log_1791348873569",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "2 travellers",
+        "newValue": "1 travellers",
+        "reason": "Group expanded to 1. Updated accommodation to 1 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348872529",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "3 travellers",
+        "newValue": "2 travellers",
+        "reason": "Group expanded to 2. Updated accommodation to 1 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348870825",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "3 travellers",
+        "newValue": "3 travellers",
+        "reason": "Group expanded to 3. Updated accommodation to 2 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348870779",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "3 travellers",
+        "newValue": "3 travellers",
+        "reason": "Group expanded to 3. Updated accommodation to 2 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348870740",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "3 travellers",
+        "newValue": "3 travellers",
+        "reason": "Group expanded to 3. Updated accommodation to 2 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348870699",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "3 travellers",
+        "newValue": "3 travellers",
+        "reason": "Group expanded to 3. Updated accommodation to 2 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348870658",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "3 travellers",
+        "newValue": "3 travellers",
+        "reason": "Group expanded to 3. Updated accommodation to 2 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348870615",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:24 AM",
+        "fieldChanged": "Travellers Count",
+        "oldValue": "4 travellers",
+        "newValue": "3 travellers",
+        "reason": "Group expanded to 3. Updated accommodation to 2 rooms, auto-adjusted per-person costs.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348599226",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:19 AM",
+        "fieldChanged": "Day 2 Weather",
+        "oldValue": "Clear / Sunny",
+        "newValue": "Heavy Rain",
+        "reason": "Weather updated to Heavy Rain. Outdoor activity risks evaluated and indoor alternatives prepared.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348597926",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:19 AM",
+        "fieldChanged": "Day 2 Weather",
+        "oldValue": "Clear / Sunny",
+        "newValue": "Sunny",
+        "reason": "Weather updated to Sunny. Outdoor activity risks evaluated and indoor alternatives prepared.",
+        "canUndo": true
+      },
+      {
+        "id": "log_1791348596300",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:19 AM",
+        "fieldChanged": "Day 2 Weather",
+        "oldValue": "Clear / Sunny",
+        "newValue": "Heavy Rain",
+        "reason": "Weather updated to Heavy Rain. Outdoor activity risks evaluated and indoor alternatives prepared.",
+        "canUndo": true
+      },
+      {
+        "id": "log_init",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:00 AM",
+        "fieldChanged": "Trip Initialized",
+        "oldValue": "None",
+        "newValue": "Moradabad ➔ Manali (4 Pax, ₹40,000)",
+        "reason": "Created complete door-to-door itinerary with outbound & return journey.",
+        "canUndo": false
+      },
+      {
+        "id": "log_init",
+        "tripId": "demo-manali-trip-2026",
+        "timestamp": "10:00 AM",
+        "fieldChanged": "Trip Initialized",
+        "oldValue": "None",
+        "newValue": "Moradabad ➔ Manali (4 Pax, ₹40,000)",
+        "reason": "Created complete door-to-door itinerary with outbound & return journey.",
+        "canUndo": false
+      },
       {
         "id": "log_1791310526239",
         "tripId": "demo-manali-trip-2026",
@@ -6611,31 +6745,103 @@
   "notifications": {
     "demo-manali-trip-2026": [
       {
-        "id": "notif_1791310526247",
-        "tripId": "demo-manali-trip-2026",
-        "title": "Weather Alert: Heavy Rain on Day 4",
-        "message": "Day 4 contains outdoor activities that may be disrupted. Check indoor alternatives in the Weather Center or Itinerary.",
-        "type": "alert",
-        "isRead": false,
-        "timestamp": "2026-10-06T18:15:26.247Z"
-      },
-      {
-        "id": "sos_1791310433364",
-        "tripId": "demo-manali-trip-2026",
-        "title": "🚨 EMERGENCY SOS TRIGGERED",
-        "message": "Emergency SOS beacon dispatched with GPS coordinates for Moradabad to Manali Himalayan Odyssey. Alerting registered emergency contacts and local mountain rescue authorities.",
-        "type": "alert",
-        "isRead": false,
-        "timestamp": "2026-10-06T18:13:53.364Z"
-      },
-      {
-        "id": "notif_1791310404817",
+        "id": "notif_1791348873578",
         "tripId": "demo-manali-trip-2026",
         "title": "Group Size Updated",
-        "message": "Trip traveller count changed from 4 to 5. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "message": "Trip traveller count changed from 2 to 1. Per-person expenses, transport seats, and hotel room requirements recalculated.",
         "type": "info",
         "isRead": false,
-        "timestamp": "2026-10-06T18:13:24.817Z"
+        "timestamp": "2026-10-07T04:54:33.578Z"
+      },
+      {
+        "id": "notif_1791348872536",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Group Size Updated",
+        "message": "Trip traveller count changed from 3 to 2. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "type": "info",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:54:32.536Z"
+      },
+      {
+        "id": "notif_1791348870832",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Group Size Updated",
+        "message": "Trip traveller count changed from 3 to 3. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "type": "info",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:54:30.832Z"
+      },
+      {
+        "id": "notif_1791348870789",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Group Size Updated",
+        "message": "Trip traveller count changed from 3 to 3. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "type": "info",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:54:30.789Z"
+      },
+      {
+        "id": "notif_1791348870746",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Group Size Updated",
+        "message": "Trip traveller count changed from 3 to 3. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "type": "info",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:54:30.746Z"
+      },
+      {
+        "id": "notif_1791348870705",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Group Size Updated",
+        "message": "Trip traveller count changed from 3 to 3. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "type": "info",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:54:30.705Z"
+      },
+      {
+        "id": "notif_1791348870664",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Group Size Updated",
+        "message": "Trip traveller count changed from 3 to 3. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "type": "info",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:54:30.664Z"
+      },
+      {
+        "id": "notif_1791348870621",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Group Size Updated",
+        "message": "Trip traveller count changed from 4 to 3. Per-person expenses, transport seats, and hotel room requirements recalculated.",
+        "type": "info",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:54:30.621Z"
+      },
+      {
+        "id": "notif_1791348599233",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Weather Alert: Heavy Rain on Day 2",
+        "message": "Day 2 contains outdoor activities that may be disrupted. Check indoor alternatives in the Weather Center or Itinerary.",
+        "type": "alert",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:49:59.233Z"
+      },
+      {
+        "id": "notif_1791348597931",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Weather Alert: Sunny on Day 2",
+        "message": "Day 2 contains outdoor activities that may be disrupted. Check indoor alternatives in the Weather Center or Itinerary.",
+        "type": "alert",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:49:57.931Z"
+      },
+      {
+        "id": "notif_1791348596353",
+        "tripId": "demo-manali-trip-2026",
+        "title": "Weather Alert: Heavy Rain on Day 2",
+        "message": "Day 2 contains outdoor activities that may be disrupted. Check indoor alternatives in the Weather Center or Itinerary.",
+        "type": "alert",
+        "isRead": false,
+        "timestamp": "2026-10-07T04:49:56.353Z"
       },
       {
         "id": "notif_welcome",
@@ -6644,7 +6850,7 @@
         "message": "Your complete 4-day travel operating plan from Moradabad to Manali has been generated.",
         "type": "success",
         "isRead": false,
-        "timestamp": "2026-10-06T18:07:27.423Z"
+        "timestamp": "2026-10-07T04:49:34.675Z"
       }
     ],
     "trip_1789586523319": [
